@@ -19,19 +19,24 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="4"
+            android:textStyle="bold"
             android:onClick="onClickBackButton"
-            android:text="뒤로가기" />
+            android:text="Back" />
 
         <TextView
             android:id="@+id/workoutTrackerTextView"
             android:layout_width="match_parent"
+            android:textStyle="bold"
             android:layout_height="match_parent"
+            android:textSize="16dp"
+            android:gravity="center"
             android:layout_weight="1"
             android:text="Workout Tracker" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/workoutTrackerRecyclerView"
+        android:padding="10dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"></androidx.recyclerview.widget.RecyclerView>
@@ -46,6 +51,7 @@
         android:id="@+id/workoutTrackerRestTimeTextView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:padding="10dp"
         android:layout_weight="1"
         android:text="휴식시간"
         android:visibility="visible" />
@@ -54,12 +60,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:textStyle="bold"
         android:orientation="horizontal">
 
         <TextView
             android:id="@+id/workoutTrackerSetsTextView"
+            android:gravity="center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textStyle="bold"
             android:layout_weight="1"
             android:text="sets" />
 
@@ -67,6 +76,8 @@
             android:id="@+id/workoutTrackerWeightTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:gravity="center"
             android:layout_weight="1"
             android:text="weight" />
 
@@ -74,6 +85,7 @@
             android:id="@+id/workoutTrackerRepsTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:layout_weight="1"
             android:text="Reps" />
     </LinearLayout>
@@ -104,6 +116,8 @@
             android:id="@+id/bluetoothTextView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:textStyle="bold"
+            android:gravity="center"
             android:layout_weight="1"
             android:text="TextView" />
 

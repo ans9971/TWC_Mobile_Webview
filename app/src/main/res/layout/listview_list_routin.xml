@@ -2,10 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="10dp">
 
     <TextView
         android:id="@+id/routinNameTextView"
+        android:textStyle="bold"
+        android:textSize="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="RoutinName"
@@ -13,6 +16,7 @@
 
     <TextView
         android:id="@+id/exerciseCountTextView"
+        android:textSize="14dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="exerciseCount, lastExerciseTimeTook"
@@ -20,6 +24,7 @@
 
     <TextView
         android:id="@+id/lastExerciseDateTextView"
+        android:textSize="14dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="lastTime: "

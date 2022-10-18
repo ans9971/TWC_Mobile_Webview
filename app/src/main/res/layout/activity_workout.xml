@@ -12,6 +12,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:textSize="20dp"
+        android:textStyle="bold"
+        android:gravity="center"
         android:text="안녕하세요 테스트님" />
 
     <ListView
@@ -23,9 +26,10 @@
     <Button
         android:id="@+id/addRoutinButton"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:background="#000000"
+        android:layout_height="50dp"
+        android:textSize="16dp"
+        android:background="#B2B2B2"
+        android:textStyle="bold"
         android:onClick="onClickAddRoutin"
         android:text="루틴 추가" />
 

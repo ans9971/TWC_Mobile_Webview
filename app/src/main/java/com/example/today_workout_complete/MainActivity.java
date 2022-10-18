@@ -76,6 +76,8 @@ public class MainActivity extends AppCompatActivity {
         login_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // 임시로 다른 곳으로 이동
+//                Intent intent = new Intent(MainActivity.this, Exercise_list.class);
                 Intent intent = new Intent(MainActivity.this, WebViewActivity.class);
                 intent.putExtra("url", "http://118.67.132.81:8080/login");
                 startActivity(intent);

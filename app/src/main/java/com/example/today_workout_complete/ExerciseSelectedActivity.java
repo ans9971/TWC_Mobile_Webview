@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageButton;
+import android.widget.Button;
 
 public class ExerciseSelectedActivity extends AppCompatActivity {
 
@@ -19,7 +19,7 @@ public class ExerciseSelectedActivity extends AppCompatActivity {
 
         Intent exerciseSelectedIntent = getIntent();
         // exercise 에서 버튼
-        ImageButton exerciseButton1 = findViewById(R.id.exerciseButton1);
+        Button exerciseButton1 = findViewById(R.id.exerciseButton1);
         exerciseButton1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -29,7 +29,7 @@ public class ExerciseSelectedActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        ImageButton exerciseButton2 = findViewById(R.id.exerciseButton2);
+        Button exerciseButton2 = findViewById(R.id.exerciseButton2);
         exerciseButton2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
