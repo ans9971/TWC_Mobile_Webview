@@ -50,33 +50,6 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         }
 
-//        Retrofit retrofit = new Retrofit.Builder()
-//                .baseUrl("http://118.67.132.81/")
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .build();
-//
-//        RetrofitAPI retrofitAPI = retrofit.create(RetrofitAPI.class);
-//        retrofitAPI.getData("nickname").enqueue(new Callback<List<UserInfo>>(){ // 생성한 인터페이스 getData 에 찾을 id를 넣고 enqueue 해주기
-//
-//             @Override
-//             public void onResponse(Call<List<UserInfo>> call, Response<List<UserInfo>> response){ // 성공적으로 응답하면 실행
-//
-//                 if(response.isSuccessful()){
-//                     List<UserInfo> data = response.body();
-//                     Log.d("TEST","성공했나?");
-////                     Log.d("TEST",data.get(0).getTitle());
-//                     //data 에서 필요한 내용 꺼내 쓰기
-//                 }
-//             }
-//
-//             @Override
-//             public void onFailure(Call<List<UserInfo>> call, Throwable t){
-//                 //실패하면 실행
-//                 Log.d("TEST","실패?");
-//                 t.printStackTrace();
-//             }
-//        });
-
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
         videoView = (VideoView) findViewById(R.id.video_view);

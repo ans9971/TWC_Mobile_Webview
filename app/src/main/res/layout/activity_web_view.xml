@@ -21,53 +21,15 @@
         </WebView>
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/menuBarlinearLayout"
-        android:layout_width="0dp"
+    <FrameLayout
+        android:id="@+id/menuFragmentFrame"
+        android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:layout_marginBottom="1dp"
-        android:orientation="horizontal"
-        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:visibility="visible">
+    </FrameLayout>
 
-        <ImageButton
-            android:id="@+id/homeButton"
-            android:layout_width="120dp"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:src="@drawable/ic_baseline_home_24"
-            android:tint="@color/main_c"
-            tools:ignore="UseAppTint" />
-
-        <ImageButton
-            android:id="@+id/exerciseButton"
-            android:layout_width="120dp"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:src="@drawable/ic_baseline_fitness_center_24"
-            android:tint="@color/main_c"
-            tools:ignore="UseAppTint" />
-
-        <ImageButton
-            android:id="@+id/calenderButton"
-            android:layout_width="120dp"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:src="@drawable/ic_baseline_calendar_today_24"
-            android:tint="@color/main_c"
-            tools:ignore="UseAppTint" />
-
-        <ImageButton
-            android:id="@+id/myPageButton"
-            android:layout_width="120dp"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:src="@drawable/ic_baseline_person_outline_24"
-            android:tint="@color/main_c"
-            tools:ignore="UseAppTint" />
-    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

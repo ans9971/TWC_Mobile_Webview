@@ -40,6 +40,9 @@ public class TrainingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_training);
 
+        MenuFragment menuFragment = new MenuFragment();
+        getSupportFragmentManager().beginTransaction().replace(R.id.menuFragmentFrame, menuFragment).commit();
+
         Intent intent = getIntent();
         routinPosition = intent.getIntExtra("routinPosition", 0);
         routinJsonArray = RoutinJsonArray.getInstance();

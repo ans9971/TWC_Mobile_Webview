@@ -48,6 +48,9 @@ public class CalenderActivity extends AppCompatActivity {
         datatext=findViewById(R.id.textView4);
         materialCalendarView = (MaterialCalendarView)findViewById(R.id.calendarView);
 
+        MenuFragment menuFragment = new MenuFragment();
+        getSupportFragmentManager().beginTransaction().replace(R.id.menuFragmentFrame, menuFragment).commit();
+
         materialCalendarView.state().edit()
                 .setFirstDayOfWeek(Calendar.SUNDAY)
                 .setMinimumDate(CalendarDay.from(2017, 0, 1)) // 달력의 시작
@@ -81,39 +84,6 @@ public class CalenderActivity extends AppCompatActivity {
                 materialCalendarView.clearSelection();
 
                 Toast.makeText(getApplicationContext(), shot_Day , Toast.LENGTH_SHORT).show();
-            }
-        });
-        ImageButton homeButton = findViewById(R.id.homeButton);
-        homeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(CalenderActivity.this, WebViewActivity.class);
-                startActivity(intent);
-            }
-        });
-        ImageButton exerciseButton = findViewById(R.id.exerciseButton);
-        exerciseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(CalenderActivity.this, WorkoutActivity.class);
-                startActivity(intent);
-            }
-        });
-        ImageButton calenderButton = findViewById(R.id.calenderButton);
-        calenderButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(CalenderActivity.this, CalenderActivity.class);
-                startActivity(intent);
-            }
-        });
-        ImageButton myPageButton = findViewById(R.id.myPageButton);
-        myPageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(CalenderActivity.this, WebViewActivity.class);
-                intent.putExtra("url", "http://118.67.132.81:8080/mypage");
-                startActivity(intent);
             }
         });
 

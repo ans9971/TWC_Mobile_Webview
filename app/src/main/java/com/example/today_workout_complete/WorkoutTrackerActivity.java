@@ -96,11 +96,15 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     private RoutinJsonArray routinJsonArray;
     private SharedPreferences spref;
     private SharedPreferences.Editor editor;
+    private String nickname;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_workout_tracker);
+
+        MenuFragment menuFragment = new MenuFragment();
+        getSupportFragmentManager().beginTransaction().replace(R.id.menuFragmentFrame, menuFragment).commit();
 
         // 블루투스 관련 코드
         readyStartButton = (Button) findViewById(R.id.readyStartButton);
@@ -122,6 +126,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
         routinJsonArray = RoutinJsonArray.getInstance();
         spref = getSharedPreferences(WorkoutActivity.MY_ROUTIN_PREFS_NAME, Context.MODE_PRIVATE);
         editor = spref.edit();
+        nickname = getSharedPreferences(WebViewActivity.MY_NICKNAME_PREFS_NAME, Context.MODE_PRIVATE).getString(WebViewActivity.MY_NICKNAME_PREFS_NAME, "");
 
 //        routin = (Routin) intent.getSerializableExtra("routin");
         ArrayList<String> exerciseNameList = new ArrayList<>();
@@ -145,6 +150,8 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
             e.printStackTrace();
         }
 
+
+
         // 실시간 그래프 코드
         chart = (LineChart) findViewById(R.id.chart);
 
@@ -166,8 +173,10 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
 
     public void updateWorkoutTrackerListView() throws JSONException{
         adapter = new WorkoutTrackerListViewAdapter();
-        int setCount = routinJsonArray.getExercise(routinPosition, exerciseSelected).getInt("setCount");
-        for(int i = 0; i < setCount; i++){
+        // 운동 변수 초기화
+        setsCount = routinJsonArray.getExercise(routinPosition, exerciseSelected).getInt("setCount");
+        setsTotal = setsCount;
+        for(int i = 0; i < setsCount; i++){
             adapter.addItem(routinJsonArray.getExercise(routinPosition, exerciseSelected).getJSONArray("reps").getInt(i));
         }
         workoutTrackerListView.setAdapter(adapter);
@@ -436,7 +445,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                 minimumValueOfSets = new ArrayList<>();
                 try {
                     Log.d(TAG, "첫 세트 시작! 세트 수는 " + setsTotal);
-                    workoutJSON.put("nickname", "얍");
+                    workoutJSON.put("nickname", nickname);
                     workoutJSON.put("workout_name", "push_up");
                     workoutJSON.put("measured_muscle", "chest");
                     workoutJSON.put("starting_time", simpleDateFormat.format(setsStartingTime));
@@ -490,6 +499,8 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
             // 모든 세트가 끝난 경우
             if(setsCount <= 0){
                 try {
+                    Log.d(TAG,"setsCount: " + setsCount);
+
                     // 마지막 set JSON 초기화
                     JSONObject tempJSON = new JSONObject();
                     long now = System.currentTimeMillis();
@@ -501,7 +512,6 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                     maximumValueOfSets.add(maximumData);
                     minimumValueOfSets.add(minimumData);
 
-                    Log.d(TAG,"남은 세트 수는 " + setsCount);
                     tempJSON.put("time", setTime);
                     tempJSON.put("break_time", breakTime);
                     tempJSON.put("maximum_value_of_set", maximumData);

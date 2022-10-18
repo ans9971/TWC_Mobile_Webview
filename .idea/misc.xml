@@ -11,9 +11,9 @@
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/drawable/ic_baseline_fitness_center_24.xml" value="0.46875" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/drawable/ic_baseline_home_24.xml" value="0.46875" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_bottom_nav1.xml" value="0.4234375" />
-        <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_calender.xml" value="0.4234375" />
+        <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_calender.xml" value="0.1" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_community.xml" value="0.4234375" />
-        <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_exercise.xml" value="0.4234375" />
+        <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_exercise.xml" value="0.19912472647702406" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_exercise_list.xml" value="0.4234375" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_exercises.xml" value="0.4234375" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_join.xml" value="0.378125" />
@@ -21,9 +21,13 @@
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_main.xml" value="0.378125" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_main2.xml" value="0.378125" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_training.xml" value="0.4234375" />
-        <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_web_view.xml" value="0.4671875" />
+        <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_web_view.xml" value="0.1" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_workout.xml" value="0.378125" />
+        <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/activity_workout_tracker.xml" value="0.41875" />
+        <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/fragment_first.xml" value="0.4125" />
+        <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/fragment_first2.xml" value="0.4125" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/fragment_home.xml" value="0.4661458333333333" />
+        <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/fragment_menu.xml" value="0.4270833333333333" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/fragment_notifications.xml" value="0.4661458333333333" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/listitem.xml" value="0.45260416666666664" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/listview_list_exercise.xml" value="0.45260416666666664" />

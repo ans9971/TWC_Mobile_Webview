@@ -23,9 +23,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.util.ArrayList;
 
-public class Exercise_list extends ListActivity {
+public class Exercise_list extends AppCompatActivity {
     private String TAG = WorkoutActivity.class.getSimpleName();
 
     ListView list;
@@ -61,6 +63,9 @@ public class Exercise_list extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_exercise_list);
 
+        MenuFragment menuFragment = new MenuFragment();
+        getSupportFragmentManager().beginTransaction().replace(R.id.menuFragmentFrame, menuFragment).commit();
+
         Intent intent = getIntent();
         isAddExercise = intent.getBooleanExtra("isAddExercise", false);
         routinPosition = intent.getIntExtra("routinPosition", 0);
@@ -90,42 +95,6 @@ public class Exercise_list extends ListActivity {
 
         isSelecttingExercise = false;
         exercises = new ArrayList<>();
-
-
-        // navigation
-        ImageButton homeButton = findViewById(R.id.homeButton);
-        homeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), WebViewActivity.class);
-                startActivity(intent);
-            }
-        });
-        ImageButton exerciseButton = findViewById(R.id.exerciseButton);
-        exerciseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Exercise_list.this, WorkoutActivity.class);
-                startActivity(intent);
-            }
-        });
-        ImageButton calenderButton = findViewById(R.id.calenderButton);
-        calenderButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Exercise_list.this, CalenderActivity.class);
-                startActivity(intent);
-            }
-        });
-        ImageButton myPageButton = findViewById(R.id.myPageButton);
-        myPageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Exercise_list.this, WebViewActivity.class);
-                intent.putExtra("url", "http://118.67.132.81:8080/mypage");
-                startActivity(intent);
-            }
-        });
 
         // 뒤로가기 버튼
         ImageButton backButton = findViewById(R.id.backButton);

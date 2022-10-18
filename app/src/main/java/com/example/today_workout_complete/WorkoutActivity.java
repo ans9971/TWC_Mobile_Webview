@@ -38,6 +38,9 @@ public class WorkoutActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_workout);
 
+        MenuFragment menuFragment = new MenuFragment();
+        getSupportFragmentManager().beginTransaction().replace(R.id.menuFragmentFrame, menuFragment).commit();
+
         routinListView = (ListView) findViewById(R.id.routinListView);
         adapter = new workoutListViewAdapter();
 

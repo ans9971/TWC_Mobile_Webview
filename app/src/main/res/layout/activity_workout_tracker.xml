@@ -122,7 +122,16 @@
             android:layout_weight="1"
             android:onClick="onClickReadyStartButton"
             android:text="준비" />
-
     </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/menuFragmentFrame"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible">
+    </FrameLayout>
 
 </LinearLayout>
