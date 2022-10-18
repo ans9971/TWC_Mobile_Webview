@@ -97,6 +97,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     private SharedPreferences spref;
     private SharedPreferences.Editor editor;
     private String nickname;
+    private String exerciseName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,12 +129,12 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
         editor = spref.edit();
         nickname = getSharedPreferences(WebViewActivity.MY_NICKNAME_PREFS_NAME, Context.MODE_PRIVATE).getString(WebViewActivity.MY_NICKNAME_PREFS_NAME, "");
 
-//        routin = (Routin) intent.getSerializableExtra("routin");
         ArrayList<String> exerciseNameList = new ArrayList<>();
         try {
             for(int i = 0; i < routinJsonArray.getRoutin(routinPosition).getJSONArray("exercises").length(); i++){
                 exerciseNameList.add(routinJsonArray.getExercise(routinPosition, i).getString("exerciseName"));
             }
+            exerciseName = routinJsonArray.getExercise(routinPosition, exerciseSelected).getString("exerciseName");
         } catch (JSONException e){
             Log.d(TAG, e.toString());
         }
@@ -202,6 +203,9 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                                 Log.d(TAG, routinJsonArray.getExercise(routinPosition, i).getString("exerciseName"));
                                 if(clikckExercise.equals(routinJsonArray.getExercise(routinPosition, i).getString("exerciseName"))){
                                     exerciseSelected = i;
+                                    exerciseName = routinJsonArray.getExercise(routinPosition, exerciseSelected).getString("exerciseName");
+                                    Log.d(TAG, "exerciseSelected: " + i + "  exerciseName: " + exerciseName);
+                                    Toast.makeText(getApplicationContext(), "exerciseName: " + exerciseName, Toast.LENGTH_SHORT);
                                     break;
                                 }
                             }
@@ -446,7 +450,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                 try {
                     Log.d(TAG, "첫 세트 시작! 세트 수는 " + setsTotal);
                     workoutJSON.put("nickname", nickname);
-                    workoutJSON.put("workout_name", "push_up");
+                    workoutJSON.put("workout_name", exerciseName);
                     workoutJSON.put("measured_muscle", "chest");
                     workoutJSON.put("starting_time", simpleDateFormat.format(setsStartingTime));
                     workoutJSON.put("sensing_interval", 500);

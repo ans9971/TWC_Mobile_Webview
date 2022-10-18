@@ -3,6 +3,7 @@ package com.example.today_workout_complete;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -39,7 +40,7 @@ public class CalenderActivity extends AppCompatActivity {
     private RetrofitAPI retrofitAPI;
     TextView datatext;
     ArrayList<String> calendarShow = new ArrayList<>();
-
+    private String nickname;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +48,8 @@ public class CalenderActivity extends AppCompatActivity {
         setContentView(R.layout.activity_calender);
         datatext=findViewById(R.id.textView4);
         materialCalendarView = (MaterialCalendarView)findViewById(R.id.calendarView);
+
+        nickname = getSharedPreferences(WebViewActivity.MY_NICKNAME_PREFS_NAME, Context.MODE_PRIVATE).getString(WebViewActivity.MY_NICKNAME_PREFS_NAME, "");
 
         MenuFragment menuFragment = new MenuFragment();
         getSupportFragmentManager().beginTransaction().replace(R.id.menuFragmentFrame, menuFragment).commit();
@@ -89,7 +92,7 @@ public class CalenderActivity extends AppCompatActivity {
 
         setRetrofitInit();
 
-        Call<List<UserInfo>> nicknamedata = retrofitAPI.getData("테스뚜");
+        Call<List<UserInfo>> nicknamedata = retrofitAPI.getData(nickname);
         nicknamedata.enqueue(new Callback<List<UserInfo>>() {
             @Override
             public void onResponse(Call<List<UserInfo>> call, Response<List<UserInfo>> response) {
