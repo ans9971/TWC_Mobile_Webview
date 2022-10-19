@@ -67,7 +67,7 @@ public class WorkoutActivity extends AppCompatActivity {
                     ArrayList<Integer> repsList = new ArrayList<>();
                     int setCount = random.nextInt(10) + 2;
                     for (int k = 0; k < setCount; k++) repsList.add(random.nextInt(7));
-                    for(int j = 0; j < 4; j++)  exerciseList.add(new Exercise(strList[j], setCount, repsList, random.nextInt(100)));
+                    for(int j = 0; j < 4; j++)  exerciseList.add(new Exercise(strList[j], setCount, repsList, random.nextInt(100), "chest"));
                     routinJsonArray.addRotin(new Routin(routinNameList[i], exerciseList, random.nextInt(10), random.nextInt(10000000) + ""));
                 }
                 // ===================================================================

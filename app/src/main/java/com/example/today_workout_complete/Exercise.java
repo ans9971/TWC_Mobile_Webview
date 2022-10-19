@@ -8,12 +8,14 @@ public class Exercise implements Serializable {
     private int setCount;
     private ArrayList<Integer> reps;
     private int breakTime;
+    private String measuredMuscle;
 
-    public Exercise(String exerciseName, int setCount, ArrayList<Integer> reps, int breakTime){
+    public Exercise(String exerciseName, int setCount, ArrayList<Integer> reps, int breakTime, String measuredMuscle){
         this.exerciseName = exerciseName;
         this.setCount = setCount;
         this.reps = reps;
         this.breakTime = breakTime;
+        this.measuredMuscle = measuredMuscle;
     }
 
     public String getExerciseName() {
@@ -27,6 +29,9 @@ public class Exercise implements Serializable {
     }
     public int getBreak_time() {
         return breakTime;
+    }
+    public String getMeasuredMuscle() {
+        return measuredMuscle;
     }
 
     public void setExerciseName(String exerciseName) {

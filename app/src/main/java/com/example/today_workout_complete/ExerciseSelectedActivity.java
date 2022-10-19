@@ -26,6 +26,7 @@ public class ExerciseSelectedActivity extends AppCompatActivity {
                 Intent intent = new Intent(ExerciseSelectedActivity.this, Exercise_list.class);
                 intent.putExtra("isAddExercise", exerciseSelectedIntent.getBooleanExtra("isAddExercise", false));
                 intent.putExtra("routinPosition", exerciseSelectedIntent.getIntExtra("routinPosition", 0));
+                intent.putExtra("measuredMuscle", "shoulder");
                 startActivity(intent);
             }
         });
@@ -36,6 +37,7 @@ public class ExerciseSelectedActivity extends AppCompatActivity {
                 Intent intent = new Intent(ExerciseSelectedActivity.this, Exercise_list.class);
                 intent.putExtra("isAddExercise", exerciseSelectedIntent.getBooleanExtra("isAddExercise", false));
                 intent.putExtra("routinPosition", exerciseSelectedIntent.getIntExtra("routinPosition", 0));
+                intent.putExtra("measuredMuscle", "back");
                 startActivity(intent);
             }
         });

@@ -57,6 +57,7 @@ public class Exercise_list extends AppCompatActivity {
     private int DEFAULT_BREAK_TIME = 50;
     private Boolean isAddExercise;
     private int routinPosition;
+    private String measuredMuscle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +70,7 @@ public class Exercise_list extends AppCompatActivity {
         Intent intent = getIntent();
         isAddExercise = intent.getBooleanExtra("isAddExercise", false);
         routinPosition = intent.getIntExtra("routinPosition", 0);
+        measuredMuscle = intent.getStringExtra("measuredMuscle");
 
         CustomList adapter = new CustomList(Exercise_list.this);
         list = (ListView)findViewById(android.R.id.list);
@@ -153,9 +155,9 @@ public class Exercise_list extends AppCompatActivity {
                     for(int j = 0; j < DEFAULT_REPS; j++) defaultReps.add(DEFAULT_REPS);
                     for(int k = 0; k < exercises.size(); k++) {
                         if(isAddExercise){
-                            routinJsonArray.addExercise(routinPosition, new Exercise(exercises.get(k), DEFAULT_SET_COUNT, defaultReps, DEFAULT_BREAK_TIME));
+                            routinJsonArray.addExercise(routinPosition, new Exercise(exercises.get(k), DEFAULT_SET_COUNT, defaultReps, DEFAULT_BREAK_TIME, measuredMuscle));
                         } else{
-                            exercisesList.add(new Exercise(exercises.get(k), DEFAULT_SET_COUNT, defaultReps, DEFAULT_BREAK_TIME));
+                            exercisesList.add(new Exercise(exercises.get(k), DEFAULT_SET_COUNT, defaultReps, DEFAULT_BREAK_TIME, measuredMuscle));
                         }
                     }
                     if(!isAddExercise) routinJsonArray.addRotin(new Routin(routinNameEditText.getText().toString(), exercisesList, 0 , ""));

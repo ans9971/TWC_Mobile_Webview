@@ -63,6 +63,7 @@ public class RoutinJsonArray {
                 exerciseJsonObject.put("exerciseName", exercise.getExerciseName());
                 exerciseJsonObject.put("setCount", exercise.getSetCount());
                 exerciseJsonObject.put("breakTime", exercise.getBreak_time());
+                exerciseJsonObject.put("measuredMuscle", exercise.getMeasuredMuscle());
                 for (int j = 0; j < exercise.getReps().size(); j++) regsJsonArray.put(exercise.getReps().get(j));
                 exerciseJsonObject.put("reps", regsJsonArray);
                 exercisesJsonArray.put(exerciseJsonObject);
@@ -90,6 +91,7 @@ public class RoutinJsonArray {
             exerciseJsonObject.put("exerciseName", exercise.getExerciseName());
             exerciseJsonObject.put("setCount", exercise.getSetCount());
             exerciseJsonObject.put("breakTime", exercise.getBreak_time());
+            exerciseJsonObject.put("measuredMuscle", exercise.getMeasuredMuscle());
             for (int j = 0; j < exercise.getReps().size(); j++) regsJsonArray.put(exercise.getReps().get(j));
             exerciseJsonObject.put("reps", regsJsonArray);
             routinArray.getJSONObject(routinPosition).getJSONArray("exercises").put(exerciseJsonObject);

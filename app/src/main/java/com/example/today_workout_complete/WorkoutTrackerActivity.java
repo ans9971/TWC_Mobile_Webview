@@ -98,6 +98,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     private SharedPreferences.Editor editor;
     private String nickname;
     private String exerciseName;
+    private String measuredMuscle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +136,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                 exerciseNameList.add(routinJsonArray.getExercise(routinPosition, i).getString("exerciseName"));
             }
             exerciseName = routinJsonArray.getExercise(routinPosition, exerciseSelected).getString("exerciseName");
+            measuredMuscle = routinJsonArray.getExercise(routinPosition, exerciseSelected).getString("measuredMuscle");
         } catch (JSONException e){
             Log.d(TAG, e.toString());
         }
@@ -150,8 +152,6 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-
 
         // 실시간 그래프 코드
         chart = (LineChart) findViewById(R.id.chart);
@@ -204,6 +204,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                                 if(clikckExercise.equals(routinJsonArray.getExercise(routinPosition, i).getString("exerciseName"))){
                                     exerciseSelected = i;
                                     exerciseName = routinJsonArray.getExercise(routinPosition, exerciseSelected).getString("exerciseName");
+                                    measuredMuscle = routinJsonArray.getExercise(routinPosition, exerciseSelected).getString("measuredMuscle");
                                     Log.d(TAG, "exerciseSelected: " + i + "  exerciseName: " + exerciseName);
                                     Toast.makeText(getApplicationContext(), "exerciseName: " + exerciseName, Toast.LENGTH_SHORT);
                                     break;
@@ -451,7 +452,8 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                     Log.d(TAG, "첫 세트 시작! 세트 수는 " + setsTotal);
                     workoutJSON.put("nickname", nickname);
                     workoutJSON.put("workout_name", exerciseName);
-                    workoutJSON.put("measured_muscle", "chest");
+                    if(measuredMuscle == null || measuredMuscle.equals("")) measuredMuscle = "chest";
+                    workoutJSON.put("measured_muscle", measuredMuscle);
                     workoutJSON.put("starting_time", simpleDateFormat.format(setsStartingTime));
                     workoutJSON.put("sensing_interval", 500);
                     workoutJSON.put("number_of_sets", setsTotal);
