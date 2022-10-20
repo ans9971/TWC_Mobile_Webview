@@ -48,6 +48,10 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ExecutionException;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class WorkoutTrackerActivity extends AppCompatActivity implements BLEControllerListener {
     private String TAG = WorkoutTrackerActivity.class.getSimpleName();
 
@@ -91,6 +95,9 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     // 웹 관련 변수
     private RequestingServer requestingServer;
     private final String myEmgDataURL = "http://118.67.132.81:3000/api/myPage/emgData";
+    RetrofitAPI retrofitAPI;
+    EmgData otherEmgData;
+
 
     private int routinPosition;
     private RoutinJsonArray routinJsonArray;
@@ -99,6 +106,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     private String nickname;
     private String exerciseName;
     private String measuredMuscle;
+    private int entryCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,7 +129,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
 
         // JSON 초기화
         workoutJSON = new JSONObject();
-        simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss_SSS");
+        simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
 
         Intent intent = getIntent();
         routinPosition = intent.getIntExtra("routinPosition", 0);
@@ -153,23 +161,74 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
             e.printStackTrace();
         }
 
-        // 실시간 그래프 코드
-        chart = (LineChart) findViewById(R.id.chart);
-
-        chart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
-
-        chart.getAxisRight().setEnabled(false);
-        chart.getLegend().setTextColor(Color.WHITE);
-        chart.animateXY(2000, 2000);
-        chart.invalidate();
-
         emgData = new ArrayList<>();
 
-        LineData data = new LineData();
-        chart.setData(data);
+        // Rest API
+        RetrofitClient retrofitClient = new RetrofitClient();
+        retrofitAPI = retrofitClient.getInstance();
 
-        feedMultiple();
-        chartThread.start();
+        Call<List<EmgData>> emgDataLst = retrofitAPI.getEmgData(nickname);
+        emgDataLst.enqueue(new Callback<List<EmgData>>() {
+            @Override
+            public void onResponse(Call<List<EmgData>> call, Response<List<EmgData>> response) {
+                try {
+                    List<EmgData> otherEmgDataList = response.body();
+                    otherEmgData = otherEmgDataList.get(0);
+                    String str = " ";
+                    int setIndex = 1;
+                    for(int i=0; i < otherEmgData.getSets().get(setIndex).getEmg_data().length; i++) {
+
+                        str += otherEmgData.getSets().get(setIndex).getEmg_data()[i] + " ";
+                    }
+                    Log.d(TAG, str);
+
+                    // 실시간 그래프 코드
+                    chart = (LineChart) findViewById(R.id.chart);
+                    ArrayList<Entry> dataList = new ArrayList<>();
+                    for(int i = 0; i < otherEmgData.getSets().get(setIndex).getEmg_data().length; i++){
+                        dataList.add(new Entry(i, otherEmgData.getSets().get(setIndex).getEmg_data()[i]));
+                    }
+                    Log.d(TAG, "===========");
+                    LineDataSet ohtersLineDataSet = new LineDataSet(dataList, "other");
+                    ohtersLineDataSet.setColor(Color.GREEN);
+
+                    ArrayList<Entry> myDataList = new ArrayList<>();
+                    myDataList.add(new Entry(0, 0));
+                    myDataList.add(new Entry(0, 5));
+                    LineDataSet myLineDataSet = new LineDataSet(myDataList, "me");
+                    myLineDataSet.setColor(Color.BLUE);
+//                    ArrayList<ILineDataSet> dataSets = new ArrayList<>();
+//                    dataSets.add(ohtersLineDataSet);
+
+                    chart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
+
+                    chart.getAxisRight().setEnabled(false);
+                    chart.getLegend().setTextColor(Color.WHITE);
+                    chart.animateXY(2000, 2000);
+                    chart.invalidate();
+
+                    Log.d(TAG, "===========");
+                    LineData data = new LineData();
+                    data.addDataSet(ohtersLineDataSet);
+                    data.addDataSet(myLineDataSet);
+
+                    chart.setData(data);
+
+                    feedMultiple();
+                    chartThread.start();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+            @Override
+            public void onFailure(Call<List<EmgData>> call, Throwable t) {
+                Log.d(TAG, t.getMessage());
+            }
+        });
+
+
+
+
     }
 
     public void updateWorkoutTrackerListView() throws JSONException{
@@ -326,44 +385,9 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
 
 
     /*
-    차트 관련 메소드
+    =================================== 차트 관련 코드 ===============================
     */
-
-    private void addEntry() {
-        LineData data = chart.getData();
-        if (data != null){
-            Float emgValue = queue.poll();
-            if(emgValue == null) return;
-            if(emgValue < 0.5f){
-                Log.d(TAG, "START or END, isWorkout?" + isWorkout);
-                controlWorkout();
-                return;
-            }
-
-            ILineDataSet set = data.getDataSetByIndex(0);
-
-            if (set == null) {
-                set = createSet();
-                data.addDataSet(set);
-            }
-
-            if(emgValue == null){
-                emgValue = preEmgValue;
-            }
-
-            emgData.add(emgValue.intValue());
-
-            data.addEntry(new Entry(set.getEntryCount(), emgValue), 0);
-            data.notifyDataChanged();
-
-            chart.notifyDataSetChanged();
-            chart.setVisibleXRangeMaximum(10);
-            chart.moveViewToX(data.getEntryCount());
-        }
-    }
-
     private LineDataSet createSet() {
-
         LineDataSet set = new LineDataSet(null, "Dynamic Data");
         set.setFillAlpha(110);
         set.setFillColor(Color.parseColor("#d7e7fa"));
@@ -378,13 +402,46 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
         set.setDrawCircles(false);
         set.setValueTextSize(9f);
         set.setDrawFilled(true);
-
         set.setAxisDependency(YAxis.AxisDependency.LEFT);
         set.setHighLightColor(Color.rgb(244, 117, 117));
 
         return set;
     }
+    
+    private void addEntry() {
+        LineData data = chart.getData();
+        int dataSetIndex = 0;
+        if (data != null){
+            Float emgValue = queue.poll();
+            if(emgValue == null) return;
+            if(emgValue < 0.5f){                                                // 0.5보다 작은 값인 경우 Start 혹은 End 신호
+                Log.d(TAG, "START or END, isWorkout?" + isWorkout);
+                controlWorkout();
+                return;
+            }
+            
+            ILineDataSet set = data.getDataSetByIndex(dataSetIndex);
+            if (set == null) {
+                set = createSet();
+                data.addDataSet(set);
+            }
+            if(emgValue == null){
+                emgValue = preEmgValue;
+            }
 
+            emgData.add(emgValue.intValue());                                   // 서버에 JSON 파일로 저장할 EMG 데이터에 추가
+
+            data.addEntry(new Entry(set.getEntryCount(), emgValue), dataSetIndex);
+//            data.addEntry(new Entry(entryCount++, emgValue), dataSetIndex);
+
+            data.notifyDataChanged();
+
+            chart.notifyDataSetChanged();
+            chart.setVisibleXRangeMaximum(10);
+            chart.moveViewToX(data.getEntryCount());
+        }
+    }
+    
     public void feedMultiple() {
         if (chartThread != null) chartThread.interrupt();
 
@@ -411,37 +468,11 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     }
 
     /*
-    =================================== 블루투스 연결 코드 ===============================
+    =================================== EMG 데이터 저장 코드 ===============================
     */
-
-    public void onClickBluetoothConnectionButton(View view){
-        Log.d(TAG, "onClickBluetoothConnectionButton...");
-        bleController.connectToDevice(deviceAddress);
-    }
-
-    public void onClickReadyStartButton(View view) throws JSONException {
-        Log.d(TAG, "onClickReadyButton...");
-        if (readyStartButton.getText().equals("준비")){
-            if(connected) bleController.sendData("R" + routinJsonArray.getExercise(routinPosition, exerciseSelected).getInt("setCount"));
-            readyStartButton.setText("시작");
-        } else if(readyStartButton.getText().equals("시작")){
-            readyStartButton.setText("종료");
-        } else {
-            readyStartButton.setText("준비");
-        }
-
-    }
-
-    // EMG 데이터 저장 코드
     public void controlWorkout() {
-
-//        WorkoutTrackerActivity.isWorkout = !WorkoutTrackerActivity.isWorkout;
-
-        if (WorkoutTrackerActivity.isWorkout){
-            // 세트 시작 시
-
-            // 첫 세트인 경우 파일로 저장할 json 객체 초기화
-            if (setsTotal == (setsCount--)) {
+        if (WorkoutTrackerActivity.isWorkout){                      // 세트 시작 시
+            if (setsTotal == (setsCount--)) {                       // 첫 세트인 경우 파일로 저장할 json 객체 초기화
                 setsStartingTime = System.currentTimeMillis();
                 setStartingTime = System.currentTimeMillis();
 
@@ -468,8 +499,8 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                     // set JSON 초기화
                     JSONObject tempJSON = new JSONObject();
                     long now = System.currentTimeMillis();
-                    long breakTime = now-breakStartingTime;
-                    long setTime = now - setStartingTime - breakTime;
+                    long breakTime = now - breakStartingTime;
+                    long setTime = breakStartingTime - setStartingTime;
 
                     Integer maximumData = Collections.max(emgData);
                     Integer minimumData = Collections.min(emgData);
@@ -490,28 +521,18 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-//                WorkoutTrackerActivity.feedMultiple();
             }
-//            else {
-//                WorkoutTrackerActivity.chartThread.start();
-//            }
-        } else {
-            // 세트 종료 시,
-//            chartThread = null;
-
-            // 휴식시간 체크
-            breakStartingTime = System.currentTimeMillis();
-
-            // 모든 세트가 끝난 경우
-            if(setsCount <= 0){
+        } else {            // 세트 종료 시
+            breakStartingTime = System.currentTimeMillis();             // 휴식시간 체크
+            if(setsCount <= 0){                                         // 모든 세트가 끝난 경우
                 try {
                     Log.d(TAG,"setsCount: " + setsCount);
 
                     // 마지막 set JSON 초기화
                     JSONObject tempJSON = new JSONObject();
                     long now = System.currentTimeMillis();
-                    long breakTime = now-breakStartingTime;
-                    long setTime = now - setStartingTime - breakTime;
+                    long breakTime = now - breakStartingTime;
+                    long setTime = breakStartingTime - setStartingTime;
 
                     Integer maximumData = Collections.max(emgData);
                     Integer minimumData = Collections.min(emgData);
@@ -535,6 +556,8 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                     String response = requestingServer.execute(myEmgDataURL).get();
                     Toast.makeText(getApplicationContext(), response, Toast.LENGTH_LONG).show();
 
+                    setsCount = setsTotal; // 세트 카운트 초기화
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e) {
@@ -544,10 +567,30 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                 }
                 Log.d(TAG,workoutJSON.toString());
             }
-
         }
-//        bleController.sendData("R" + setsTotal);
         Log.d(TAG,"isWorkout " + WorkoutTrackerActivity.isWorkout);
+    }
+
+    /*
+    =================================== 블루투스 연결 코드 ===============================
+    */
+
+    public void onClickBluetoothConnectionButton(View view){
+        Log.d(TAG, "onClickBluetoothConnectionButton...");
+        if(deviceAddress != null ) bleController.connectToDevice(deviceAddress);
+    }
+
+    public void onClickReadyStartButton(View view) throws JSONException {
+        Log.d(TAG, "onClickReadyButton...");
+        if (readyStartButton.getText().equals("준비")){
+            if(connected) bleController.sendData("R" + routinJsonArray.getExercise(routinPosition, exerciseSelected).getInt("setCount"));
+            readyStartButton.setText("시작");
+        } else if(readyStartButton.getText().equals("시작")){
+            readyStartButton.setText("종료");
+        } else {
+            readyStartButton.setText("준비");
+        }
+
     }
 
     @Override
@@ -566,14 +609,12 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     @Override
     public void BLEControllerDisconnected() {
         Log.d(TAG, "[BLE]\tDisconnected");
-//        disableButtons();
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 connectButton.setEnabled(true);
             }
         });
-//        this.isLEDOn = false;
     }
 
     @Override
@@ -604,7 +645,6 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     @Override
     protected void onStart() {
         super.onStart();
-
         if(!BluetoothAdapter.getDefaultAdapter().isEnabled()){
             Intent enableBTIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBTIntent, 1);
@@ -614,7 +654,6 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     @Override
     protected void onResume() {
         super.onResume();
-
         this.deviceAddress = null;
         this.bleController = BLEController.getInstance(this, bluetoothConnectionStatusTextView, readyStartButton);
         this.bleController.addBLEControllerListener(this);
@@ -628,11 +667,8 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     @Override
     protected void onPause() {
         super.onPause();
-
         this.bleController.removeBLEControllerListener(this);
-
-        if (chartThread != null)
-            chartThread.interrupt();
+        if (chartThread != null) chartThread.interrupt();
     }
 
 }

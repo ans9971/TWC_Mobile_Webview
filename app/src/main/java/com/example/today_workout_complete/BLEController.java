@@ -77,9 +77,10 @@ public class BLEController {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             BluetoothDevice device = result.getDevice();
-            Log.i("[BLE]","onScanResult: "+ device.toString());
+//            Log.i("[BLE]","onScanResult: "+ device.toString());
 
             if (device.getName() != null && device.getName().startsWith("TWC")){
+                Log.i("[BLE]","onScanResult: "+ device.toString());
                 deviceFound(device);
             }
 //            if (device.toString().equals("D4:36:39:9C:D4:83")){

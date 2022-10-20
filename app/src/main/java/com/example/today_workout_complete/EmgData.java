@@ -24,13 +24,13 @@ public class EmgData {
     private int number_of_sets;
 
     @SerializedName("total_workout_time")
-    private int total_workout_time;
+    private long total_workout_time;
 
     @SerializedName("maximum_value_of_sets")
-    private int maximum_value_of_sets;
+    private float maximum_value_of_sets;
 
     @SerializedName("minimum_value_of_sets")
-    private int minimum_value_of_sets;
+    private float minimum_value_of_sets;
 
     @SerializedName("sets")
     private List<Sets> sets;
@@ -84,27 +84,27 @@ public class EmgData {
         this.number_of_sets = number_of_sets;
     }
 
-    public int getTotal_workout_time() {
+    public long getTotal_workout_time() {
         return total_workout_time;
     }
 
-    public void setTotal_workout_time(int total_workout_time) {
+    public void setTotal_workout_time(long total_workout_time) {
         this.total_workout_time = total_workout_time;
     }
 
-    public int getMaximum_value_of_sets() {
+    public float getMaximum_value_of_sets() {
         return maximum_value_of_sets;
     }
 
-    public void setMaximum_value_of_sets(int maximum_value_of_sets) {
+    public void setMaximum_value_of_sets(float maximum_value_of_sets) {
         this.maximum_value_of_sets = maximum_value_of_sets;
     }
 
-    public int getMinimum_value_of_sets() {
+    public float getMinimum_value_of_sets() {
         return minimum_value_of_sets;
     }
 
-    public void setMinimum_value_of_sets(int minimum_value_of_sets) {
+    public void setMinimum_value_of_sets(float minimum_value_of_sets) {
         this.minimum_value_of_sets = minimum_value_of_sets;
     }
 
