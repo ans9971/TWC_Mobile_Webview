@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class BLEController {
-    private String TAG = WorkoutTrackerActivity.class.getSimpleName();
+    private String TAG = BLEController.class.getSimpleName();
 
     private static BLEController instance;
 
@@ -41,19 +41,25 @@ public class BLEController {
     private UUID SERIVCE_NOTY_UUID;
 
     private TextView logView;
+    private Button bluetoothConnectionButton;
     private Button readyStartButton;
 
-    private BLEController(Context ctx, TextView logView, Button readyStartButton) {
+    private BLEController(Context ctx, TextView logView, Button bluetoothConnectionButton, Button readyStartButton) {
         this.bluetoothManager = (BluetoothManager) ctx.getSystemService(Context.BLUETOOTH_SERVICE);
         this.logView = logView;
+        this.bluetoothConnectionButton = bluetoothConnectionButton;
         this.readyStartButton = readyStartButton;
     }
 
-    public static BLEController getInstance(Context ctx, TextView logView, Button readyStartButton) {
+    public static BLEController getInstance(Context ctx, TextView logView, Button bluetoothConnectionButton, Button readyStartButton) {
         if(null == instance)
-            instance = new BLEController((ctx), logView, readyStartButton);
+            instance = new BLEController((ctx), logView, bluetoothConnectionButton, readyStartButton);
 
         return instance;
+    }
+
+    public boolean isConnected(){
+        return btGattChar != null;
     }
 
     public void addBLEControllerListener(BLEControllerListener l) {
@@ -132,6 +138,7 @@ public class BLEController {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.i("[BLE]", "start service discovery " + bluetoothGatt.discoverServices());
+                bluetoothConnectionButton.setText("연결 해제"); // 버튼 텍스트 "연결" => "연결 해제"
             }else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 btGattChar = null;
                 Log.w("[BLE]", "DISCONNECTED with status " + status);
@@ -226,14 +233,16 @@ public class BLEController {
     }
 
     public void sendData(String data) {
-        this.btGattChar.setValue(data);
+        btGattChar.setValue(data);
         Log.i("[BLE]", "sendData: " + data );
         logView.setText(logView.getText() + "\n" + data);
-        bluetoothGatt.writeCharacteristic(this.btGattChar);
+        bluetoothGatt.writeCharacteristic(btGattChar);
     }
 
     public void disconnect() {
-        this.bluetoothGatt.disconnect();
+//        sendData("B");
+        bluetoothGatt.disconnect();
+        btGattChar = null;
     }
 
 }

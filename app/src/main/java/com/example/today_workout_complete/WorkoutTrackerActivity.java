@@ -29,6 +29,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
@@ -55,16 +56,27 @@ import retrofit2.Response;
 public class WorkoutTrackerActivity extends AppCompatActivity implements BLEControllerListener {
     private String TAG = WorkoutTrackerActivity.class.getSimpleName();
 
-//    private Routin routin = null;
-    private RecyclerView workoutTrackerRecyclerView = null;
-    private RecyclerViewAdapter recyclerViewAdapter = null;
-    private ListView workoutTrackerListView = null;
-    private WorkoutTrackerListViewAdapter adapter = null;
+    // 내부 저장소 관련 변수
+    private int routinPosition;
+    private RoutinJsonArray routinJsonArray;
+    private SharedPreferences spref;
+    private SharedPreferences.Editor editor;
+    private String nickname;
+    private String exerciseName;
+    private String measuredMuscle;
+
+    private RecyclerView workoutTrackerRecyclerView;
+    private RecyclerViewAdapter recyclerViewAdapter;
+    private ListView workoutTrackerListView;
+    private WorkoutTrackerListViewAdapter adapter;
     private int exerciseSelected = 0;
     private TextView workoutTrackerRestTimeTextView;
 
+    // 차트 관련 변수
     private LineChart chart;
     public Thread chartThread;
+    private LineDataSet ohtersLineDataSet;
+    private LineDataSet myLineDataSet;
 
     static Queue<Float> queue = new LinkedList<>();
     private Float preEmgValue = 0f;
@@ -72,9 +84,9 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     private Button readyStartButton;
     static boolean isWorkout;
 
-    private List<Integer> emgData;                          // set의 EMG 데이터를 저장하기 위한 Integer형 리스트
-    private List<Integer> maximumValueOfSets;               // 각 emgData의 가장 큰 값들을 저장하는 Integer형 리스트
-    private List<Integer> minimumValueOfSets;               // 각 emgData의 가장 작은 값들을 저장하는 Integer형 리스트
+    private List<Float> emgData;                          // set의 EMG 데이터를 저장하기 위한 Integer형 리스트
+    private List<Float> maximumValueOfSets;               // 각 emgData의 가장 큰 값들을 저장하는 Integer형 리스트
+    private List<Float> minimumValueOfSets;               // 각 emgData의 가장 작은 값들을 저장하는 Integer형 리스트
 
     private int setsTotal;
     private int setsCount;
@@ -86,9 +98,9 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     private long breakStartingTime;             // 휴식 시작 시간
 
     // 블루투스 관련 변수
-    private static BLEController bleController = null;
+    private static BLEController bleController;
     private TextView bluetoothConnectionStatusTextView;
-    private Button connectButton;
+    private Button bluetoothConnectionButton;
     private boolean connected;
     private String deviceAddress;
 
@@ -97,16 +109,11 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     private final String myEmgDataURL = "http://118.67.132.81:3000/api/myPage/emgData";
     RetrofitAPI retrofitAPI;
     EmgData otherEmgData;
-
-
-    private int routinPosition;
-    private RoutinJsonArray routinJsonArray;
-    private SharedPreferences spref;
-    private SharedPreferences.Editor editor;
-    private String nickname;
-    private String exerciseName;
-    private String measuredMuscle;
-    private int entryCount = 0;
+    
+    // 유사도
+    private List<EmgData> otherEmgDataList;
+    private DynamicTimeWarping dtw;
+    private List<TextView> similarityTextViewList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,12 +123,18 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
         MenuFragment menuFragment = new MenuFragment();
         getSupportFragmentManager().beginTransaction().replace(R.id.menuFragmentFrame, menuFragment).commit();
 
+        similarityTextViewList = new ArrayList<>();
+
+        dtw = new DynamicTimeWarping();
+
         // 블루투스 관련 코드
         readyStartButton = (Button) findViewById(R.id.readyStartButton);
         bluetoothConnectionStatusTextView = (TextView) findViewById(R.id.bluetoothTextView);
-        if(bleController == null) bleController = BLEController.getInstance(this, bluetoothConnectionStatusTextView, readyStartButton);
-        connectButton = findViewById(R.id.bluetoothConnectionButton);
-        connected = false;
+        bluetoothConnectionButton = (Button) findViewById(R.id.bluetoothConnectionButton);
+        if(bleController == null) bleController = BLEController.getInstance(this, bluetoothConnectionStatusTextView, bluetoothConnectionButton, readyStartButton);
+        if(bleController.isConnected()) bluetoothConnectionButton.setText("연결 해제");
+
+        connected = bleController.isConnected();
         isWorkout = false;
 
         checkBLESupport();
@@ -166,54 +179,19 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
         // Rest API
         RetrofitClient retrofitClient = new RetrofitClient();
         retrofitAPI = retrofitClient.getInstance();
-
+        
+        // 후에 찜하기로 변경하기
         Call<List<EmgData>> emgDataLst = retrofitAPI.getEmgData(nickname);
         emgDataLst.enqueue(new Callback<List<EmgData>>() {
             @Override
             public void onResponse(Call<List<EmgData>> call, Response<List<EmgData>> response) {
                 try {
-                    List<EmgData> otherEmgDataList = response.body();
+                    otherEmgDataList = response.body();
                     otherEmgData = otherEmgDataList.get(0);
-                    String str = " ";
-                    int setIndex = 1;
-                    for(int i=0; i < otherEmgData.getSets().get(setIndex).getEmg_data().length; i++) {
-
-                        str += otherEmgData.getSets().get(setIndex).getEmg_data()[i] + " ";
-                    }
-                    Log.d(TAG, str);
 
                     // 실시간 그래프 코드
                     chart = (LineChart) findViewById(R.id.chart);
-                    ArrayList<Entry> dataList = new ArrayList<>();
-                    for(int i = 0; i < otherEmgData.getSets().get(setIndex).getEmg_data().length; i++){
-                        dataList.add(new Entry(i, otherEmgData.getSets().get(setIndex).getEmg_data()[i]));
-                    }
-                    Log.d(TAG, "===========");
-                    LineDataSet ohtersLineDataSet = new LineDataSet(dataList, "other");
-                    ohtersLineDataSet.setColor(Color.GREEN);
-
-                    ArrayList<Entry> myDataList = new ArrayList<>();
-                    myDataList.add(new Entry(0, 0));
-                    myDataList.add(new Entry(0, 5));
-                    LineDataSet myLineDataSet = new LineDataSet(myDataList, "me");
-                    myLineDataSet.setColor(Color.BLUE);
-//                    ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-//                    dataSets.add(ohtersLineDataSet);
-
-                    chart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
-
-                    chart.getAxisRight().setEnabled(false);
-                    chart.getLegend().setTextColor(Color.WHITE);
-                    chart.animateXY(2000, 2000);
-                    chart.invalidate();
-
-                    Log.d(TAG, "===========");
-                    LineData data = new LineData();
-                    data.addDataSet(ohtersLineDataSet);
-                    data.addDataSet(myLineDataSet);
-
-                    chart.setData(data);
-
+                    initChart();
                     feedMultiple();
                     chartThread.start();
                 }catch (Exception e){
@@ -225,10 +203,46 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                 Log.d(TAG, t.getMessage());
             }
         });
+    }
 
+    public void initChart(){
+        chart.clear();
+        String str = " ";
+        int setIndex = 1;
+        for(int i=0; i < otherEmgData.getSets().get(setIndex).getEmg_data().length; i++) {
+            str += otherEmgData.getSets().get(setIndex).getEmg_data()[i] + " ";
+        }
+        Log.d(TAG, str);
+        ArrayList<Entry> othersDataList = new ArrayList<>();
+        for(int i = 0; i < otherEmgData.getSets().get(setIndex).getEmg_data().length; i++){
+            othersDataList.add(new Entry(i, otherEmgData.getSets().get(setIndex).getEmg_data()[i]));
+        }
+        ohtersLineDataSet = new LineDataSet(othersDataList, "숙련자");
+        ohtersLineDataSet.setCircleRadius(1f);
+        ohtersLineDataSet.setColor(Color.GREEN);
+        ohtersLineDataSet.setDrawValues(false);
 
+        ArrayList<Entry> myDataList = new ArrayList<>();
+        myDataList.add(new Entry(0, 0));
+        myLineDataSet = new LineDataSet(myDataList, "나");
+        myLineDataSet.setCircleRadius(1f);
+        myLineDataSet.setColor(Color.BLUE);
+        myLineDataSet.setDrawValues(false);
 
+        chart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
 
+        chart.getAxisRight().setEnabled(false);
+        chart.getLegend().setTextColor(Color.WHITE);
+        chart.animateXY(2000, 2000);
+
+        Log.d(TAG, "===========");
+        LineData data = new LineData();
+        data.addDataSet(ohtersLineDataSet);
+        data.addDataSet(myLineDataSet);
+
+        chart.setData(data);
+        chart.invalidate();
+        if(setsTotal != setsCount) chart.setVisibleXRange(0, 40);
     }
 
     public void updateWorkoutTrackerListView() throws JSONException{
@@ -347,9 +361,10 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
 
             TextView setsNumberTextView = (TextView) convertView.findViewById(R.id.setsNumberTextView);
             EditText workoutTrackerRepsEditTextNumber = (EditText) convertView.findViewById(R.id.workoutTrackerRepsEditTextNumber);
+            similarityTextViewList.add((TextView) convertView.findViewById(R.id.similarityTextView));
 
-            setsNumberTextView.setText(String.valueOf(position));
-            workoutTrackerRepsEditTextNumber.setText(String.valueOf(reps));
+            setsNumberTextView.setText(position + "");
+            workoutTrackerRepsEditTextNumber.setText(reps + "");
             Log.d(TAG, "getView() - [ "+position+" ] "+ reps);
 
             workoutTrackerRepsEditTextNumber.addTextChangedListener(new TextWatcher() {
@@ -364,10 +379,8 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                         routinJsonArray.updateReps(routinPosition, exerciseSelected, position, Integer.parseInt(editable.toString()));
                         editor.putString(WorkoutActivity.MY_ROUTIN_PREFS_NAME, routinJsonArray.stringfyRoutinArray());
                         editor.commit();
-//                        routin.getExercises().get(exerciseSelected).getReps().set(position, Integer.parseInt(editable.toString()));
                     } catch (NumberFormatException | JSONException e){
                         Log.d(TAG, e.toString());
-//                        routin.getExercises().get(exerciseSelected).getReps().set(position, 0);
                     }
                 }
             });
@@ -387,7 +400,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     /*
     =================================== 차트 관련 코드 ===============================
     */
-    private LineDataSet createSet() {
+    private LineDataSet createSet() {                                               // 수정할 코드
         LineDataSet set = new LineDataSet(null, "Dynamic Data");
         set.setFillAlpha(110);
         set.setFillColor(Color.parseColor("#d7e7fa"));
@@ -410,7 +423,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     
     private void addEntry() {
         LineData data = chart.getData();
-        int dataSetIndex = 0;
+        int dataSetIndex = 1;
         if (data != null){
             Float emgValue = queue.poll();
             if(emgValue == null) return;
@@ -421,6 +434,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
             }
             
             ILineDataSet set = data.getDataSetByIndex(dataSetIndex);
+            Log.d(TAG, set.getLabel());
             if (set == null) {
                 set = createSet();
                 data.addDataSet(set);
@@ -429,16 +443,15 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                 emgValue = preEmgValue;
             }
 
-            emgData.add(emgValue.intValue());                                   // 서버에 JSON 파일로 저장할 EMG 데이터에 추가
+            emgData.add(emgValue);                                   // 서버에 JSON 파일로 저장할 EMG 데이터에 추가
 
             data.addEntry(new Entry(set.getEntryCount(), emgValue), dataSetIndex);
-//            data.addEntry(new Entry(entryCount++, emgValue), dataSetIndex);
 
             data.notifyDataChanged();
 
             chart.notifyDataSetChanged();
-            chart.setVisibleXRangeMaximum(10);
-            chart.moveViewToX(data.getEntryCount());
+            chart.setVisibleXRangeMaximum(40);
+            chart.moveViewToX(set.getEntryCount() < chart.getVisibleXRange()/4 ? 0 : set.getEntryCount() - (chart.getVisibleXRange()/4));
         }
     }
     
@@ -471,6 +484,8 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     =================================== EMG 데이터 저장 코드 ===============================
     */
     public void controlWorkout() {
+        Float maximumData = 0f;
+        Float minimumData = 0f;
         if (WorkoutTrackerActivity.isWorkout){                      // 세트 시작 시
             if (setsTotal == (setsCount--)) {                       // 첫 세트인 경우 파일로 저장할 json 객체 초기화
                 setsStartingTime = System.currentTimeMillis();
@@ -496,16 +511,13 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                 }
             } else {    // 첫 세트 이후 세트 시작, (휴식시간 포함, 다음 S 신호를 보내는 경우)
                 try {
+                    initChart();
+
                     // set JSON 초기화
                     JSONObject tempJSON = new JSONObject();
                     long now = System.currentTimeMillis();
                     long breakTime = now - breakStartingTime;
                     long setTime = breakStartingTime - setStartingTime;
-
-                    Integer maximumData = Collections.max(emgData);
-                    Integer minimumData = Collections.min(emgData);
-                    maximumValueOfSets.add(maximumData);
-                    minimumValueOfSets.add(minimumData);
 
                     Log.d(TAG, "남은 세트 수는 " + setsCount);
                     tempJSON.put("time", setTime);
@@ -534,8 +546,8 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                     long breakTime = now - breakStartingTime;
                     long setTime = breakStartingTime - setStartingTime;
 
-                    Integer maximumData = Collections.max(emgData);
-                    Integer minimumData = Collections.min(emgData);
+                    maximumData = Collections.max(emgData);
+                    minimumData = Collections.min(emgData);
                     maximumValueOfSets.add(maximumData);
                     minimumValueOfSets.add(minimumData);
 
@@ -552,24 +564,114 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                     workoutJSON.put("minimum_value_of_sets", Collections.max(minimumValueOfSets));
                     workoutJSON.put("sets", setsSON);
                     // 웹 서버에 전송
+                    /*
                     requestingServer = new RequestingServer(this, workoutJSON.toString());
                     String response = requestingServer.execute(myEmgDataURL).get();
                     Toast.makeText(getApplicationContext(), response, Toast.LENGTH_LONG).show();
+                    */
+
+                    showDtwDistacne();
 
                     setsCount = setsTotal; // 세트 카운트 초기화
+                    emgData = new ArrayList<>();
 
                 } catch (JSONException e) {
                     e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
                 }
+//                catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                } catch (ExecutionException e) {
+//                    e.printStackTrace();
+//                }
                 Log.d(TAG,workoutJSON.toString());
+            } else {
+                maximumData = Collections.max(emgData);
+                minimumData = Collections.min(emgData);
+                maximumValueOfSets.add(maximumData);
+                minimumValueOfSets.add(minimumData);
+                showDtwDistacne();
             }
         }
         Log.d(TAG,"isWorkout " + WorkoutTrackerActivity.isWorkout);
     }
+
+    public void showDtwDistacne(){
+        // DTW distance 계산
+        Float[] cutOtherEmgData = dtw.cutPeriod(otherEmgData.getSets().get(1).getEmg_data());
+        Float[] cutEmgData = dtw.cutPeriod(emgData.toArray(new Float[emgData.size()]));
+        Float dtwDistance = dtw.getDtwDistance(cutOtherEmgData, cutEmgData);
+
+        Toast.makeText(getApplicationContext(), "세트 끝 DTW distance: " + dtwDistance, Toast.LENGTH_LONG).show();
+
+        ArrayList<int[]> warpingPath = dtw.getWarpingPath(otherEmgData.getSets().get(1).getEmg_data(), emgData.toArray(new Float[emgData.size()]));
+        String path = "";
+        for(int[] wp : warpingPath) path += wp[0] + "," + wp[1] + " - ";
+        Log.d(TAG, "dtwDistance: " + dtwDistance);
+        Log.d(TAG, "path: " + path);
+
+        // 거리 => %
+        int currentSet = setsTotal - setsCount - 1;
+        float maximumEmgData = otherEmgData.getSets().get(1).getMaximum_value_of_set() > maximumValueOfSets.get(currentSet) ? otherEmgData.getSets().get(1).getMaximum_value_of_set() : maximumValueOfSets.get(currentSet);
+        float minimumEmgData = otherEmgData.getSets().get(1).getMinimum_value_of_set() < minimumValueOfSets.get(currentSet) ? otherEmgData.getSets().get(1).getMinimum_value_of_set() : minimumValueOfSets.get(currentSet);
+        int betterLongArrayLenth = cutOtherEmgData.length > cutEmgData.length ? cutOtherEmgData.length : cutEmgData.length;
+        float maximumDistance = (maximumEmgData-minimumEmgData) * betterLongArrayLenth;
+        float similarity = dtwDistance * 100 / maximumDistance;
+        Log.d(TAG, "currentSet: " + currentSet);
+        Log.d(TAG,   "maximumEmgData: " + maximumEmgData + "  minimumEmgData: " + minimumEmgData + "  warpingPath.size(): " + warpingPath.size() + " betterLongArrayLenth: " + betterLongArrayLenth);
+        Log.d(TAG,   "maximumDistance: " + maximumDistance + "  dtwDistance: " + dtwDistance  + "  dtwDistance*100/maximumDistance: " + (dtwDistance * 100 / maximumDistance) );
+        Log.d(TAG,   "similarity: " + similarity);
+        similarityTextViewList.get(currentSet).setText(String.format("%.2f", similarity) + "%");
+        similarityTextViewList.get(currentSet).setVisibility(View.VISIBLE);
+
+        // chart 갱신
+        chart.clear();
+        ArrayList<Entry> othersDataList = new ArrayList<>();
+        for(int i = 0; i < cutOtherEmgData.length; i++) othersDataList.add(new Entry(i, cutOtherEmgData[i]));
+        Log.d(TAG, "===========");
+        ohtersLineDataSet = new LineDataSet(othersDataList, "숙련자");
+        ohtersLineDataSet.setCircleRadius(1f);
+        ohtersLineDataSet.setColor(Color.GREEN);
+        ohtersLineDataSet.setDrawValues(false);
+        ohtersLineDataSet.setDrawCircleHole(false);
+
+        ArrayList<Entry> myDataList = new ArrayList<>();
+        for(int i = 0; i < cutEmgData.length; i++) myDataList.add(new Entry(i, cutEmgData[i]));
+        myLineDataSet = new LineDataSet(myDataList, "나");
+        myLineDataSet.setCircleRadius(1f);
+        myLineDataSet.setColor(Color.BLUE);
+        myLineDataSet.setDrawValues(false);
+        myLineDataSet.setDrawCircleHole(false);
+
+        chart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
+        chart.getAxisRight().setEnabled(false);
+        chart.getLegend().setTextColor(Color.WHITE);
+        chart.animateXY(2000, 2000);
+
+        Log.d(TAG, "===========");
+        LineData data = new LineData();
+        data.addDataSet(ohtersLineDataSet);
+        data.addDataSet(myLineDataSet);
+        // warping path 데이터 셋 추가
+        for(int[] wp : warpingPath){
+            ArrayList<Entry> wrapingPathDataList = new ArrayList<>();
+            wrapingPathDataList.add(new Entry(wp[0]-1, cutOtherEmgData[wp[0]-1]));
+            wrapingPathDataList.add(new Entry(wp[1]-1, cutEmgData[wp[1]-1]));
+            LineDataSet wrapingPathLineDataSet = new LineDataSet(wrapingPathDataList, "");
+            wrapingPathLineDataSet.setFormLineWidth(0f);
+            wrapingPathLineDataSet.setFormSize(0f);
+            wrapingPathLineDataSet.setColor(Color.GRAY);
+            wrapingPathLineDataSet.setDrawValues(false);
+            wrapingPathLineDataSet.setDrawCircles(false);
+            data.addDataSet(wrapingPathLineDataSet);
+        }
+        chart.setData(data);
+
+        chart.moveViewToX(0f);
+        chart.invalidate();
+        float xMaxRange = cutOtherEmgData.length > cutEmgData.length ? cutOtherEmgData.length : cutEmgData.length;
+        chart.setVisibleXRange(0, xMaxRange);
+    }
+
 
     /*
     =================================== 블루투스 연결 코드 ===============================
@@ -577,7 +679,13 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
 
     public void onClickBluetoothConnectionButton(View view){
         Log.d(TAG, "onClickBluetoothConnectionButton...");
-        if(deviceAddress != null ) bleController.connectToDevice(deviceAddress);
+        if(bluetoothConnectionButton.getText().equals("연결")){
+            Log.d(TAG, "연결!!!");
+            if(deviceAddress != null ) bleController.connectToDevice(deviceAddress);
+        } else {
+            bleController.disconnect();
+            bluetoothConnectionButton.setText("연결");
+        }
     }
 
     public void onClickReadyStartButton(View view) throws JSONException {
@@ -612,7 +720,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                connectButton.setEnabled(true);
+                bluetoothConnectionButton.setEnabled(true);
             }
         });
     }
@@ -621,7 +729,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     public void BLEDeviceFound(String name, String address) {
         Log.d(TAG,"Device " + name + " found with address " + address);
         this.deviceAddress = address;
-        this.connectButton.setEnabled(true);
+        this.bluetoothConnectionButton.setEnabled(true);
     }
 
     private void checkPermissions() {
@@ -655,7 +763,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     protected void onResume() {
         super.onResume();
         this.deviceAddress = null;
-        this.bleController = BLEController.getInstance(this, bluetoothConnectionStatusTextView, readyStartButton);
+        this.bleController = BLEController.getInstance(this, bluetoothConnectionStatusTextView, bluetoothConnectionButton, readyStartButton);
         this.bleController.addBLEControllerListener(this);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
