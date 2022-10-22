@@ -1,11 +1,14 @@
 package com.example.today_workout_complete;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -27,13 +30,16 @@ import java.util.List;
 public class TrainingActivity extends AppCompatActivity {
     private String TAG = TrainingActivity.class.getSimpleName();
 
-    private ListView exerciseListView = null;
-    private exerciseListViewAdapter adapter = null;
-    private List<LinearLayout> editLinearLayoutList = null;
+    private ListView exerciseListView;
+    private exerciseListViewAdapter adapter;
+    private List<LinearLayout> editLinearLayoutList;
+    private List<Button> exerciseDeleteButtonList;
     private RoutinJsonArray routinJsonArray;
     private int routinPosition = 0;
     private SharedPreferences spref;
     private SharedPreferences.Editor editor;
+    private float preCurX = 0f;
+    private int prePosition = 10000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +69,7 @@ public class TrainingActivity extends AppCompatActivity {
         }
 
         editLinearLayoutList = new ArrayList<>();
+        exerciseDeleteButtonList= new ArrayList<>();
         exerciseListView = (ListView) findViewById(R.id.exerciseListView);
         adapter = new exerciseListViewAdapter();
 
@@ -109,13 +116,81 @@ public class TrainingActivity extends AppCompatActivity {
                 View view = new View(context);
                 view = (View) convertView;
             }
-            editLinearLayoutList.add((LinearLayout) convertView.findViewById(R.id.editLinearLayout));
+
 
             TextView exerciseNameTextView = (TextView) convertView.findViewById(R.id.exerciseNameTextView);
             TextView exerciseInfomationTextView = (TextView) convertView.findViewById(R.id.exerciseInfomationTextView);
             EditText setEditTextNumber =  (EditText) convertView.findViewById(R.id.setEditTextNumber);
             EditText repsEditTextNumber =  (EditText) convertView.findViewById(R.id.repsEditTextNumber);
             EditText breakTimeEditTextNumber =  (EditText) convertView.findViewById(R.id.breakTimeEditTextNumber);
+            Button exerciseDeleteButton = (Button) convertView.findViewById(R.id.exerciseDeleteButton);
+
+            editLinearLayoutList.add((LinearLayout) convertView.findViewById(R.id.editLinearLayout));
+            exerciseDeleteButtonList.add(exerciseDeleteButton);
+
+            // 운동 삭제
+            exerciseDeleteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    AlertDialog.Builder routinDeleteAlert = new AlertDialog.Builder(TrainingActivity.this);
+
+                    String title = "정말 삭제하시겠습니까?";
+                    routinDeleteAlert.setTitle(title);
+
+                    routinDeleteAlert.setIcon(R.drawable.ic_baseline_fitness_center_24);
+                    routinDeleteAlert.setPositiveButton("삭제", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            routinJsonArray.deleteExercise(routinPosition, position);
+                            Log.d(TAG, routinJsonArray.stringfyRoutinArray());
+                            editor.putString(WorkoutActivity.MY_ROUTIN_PREFS_NAME, routinJsonArray.stringfyRoutinArray());
+                            editor.commit();
+                            adapter = new exerciseListViewAdapter();
+                            try {
+                                for(int j = 0; j < routinJsonArray.getRoutin(routinPosition).getJSONArray("exercises").length(); j++){
+                                    adapter.addItem(routinJsonArray.getExercise(routinPosition, j));
+                                }
+                            } catch (JSONException e){
+                                Log.d(TAG, e.toString());
+                            }
+                            exerciseListView.setAdapter(adapter);
+                            Toast.makeText(getApplicationContext(), "삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    routinDeleteAlert.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Toast.makeText(getApplicationContext(), "취소되었습니다.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    routinDeleteAlert.show();
+                }
+            });
+
+            // 스크롤 제스처로 삭제 버튼 visible 제어
+            convertView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    if(motionEvent.getAction() == MotionEvent.ACTION_MOVE){
+                        float curX = motionEvent.getX();
+                        float curY = motionEvent.getY();
+                        Log.d(TAG, "손가락 움직임 : " + prePosition + "  " + preCurX+", "+curX+", "+curY);
+                        if(prePosition != position){
+                            preCurX = curX;
+                            prePosition = position;
+                            return false;
+                        }
+                        if(preCurX > curX){
+                            exerciseDeleteButton.setVisibility(View.VISIBLE);
+                        } else if(preCurX < curX) {
+                            exerciseDeleteButton.setVisibility(View.GONE);
+                        }
+                        preCurX = curX;
+                        prePosition = position;
+                    }
+                    return false;
+                }
+            });
 
             try {
                 exerciseNameTextView.setText(exerciseItem.getString("exerciseName"));
@@ -135,7 +210,6 @@ public class TrainingActivity extends AppCompatActivity {
                             routinJsonArray.updateSetCount(routinPosition, position, Integer.parseInt(setEditTextNumber.getText().toString()));
                             editor.putString(WorkoutActivity.MY_ROUTIN_PREFS_NAME, routinJsonArray.stringfyRoutinArray());
                             editor.commit();
-//                            routin.getExercises().get(position).setSetCount(Integer.parseInt(setEditTextNumber.getText().toString()));
                         } catch (NumberFormatException | JSONException e){
                             Log.d(TAG, e.toString());
                         }
@@ -151,7 +225,6 @@ public class TrainingActivity extends AppCompatActivity {
                             routinJsonArray.updateAllReps(routinPosition, position, Integer.parseInt(repsEditTextNumber.getText().toString()));
                             editor.putString(WorkoutActivity.MY_ROUTIN_PREFS_NAME, routinJsonArray.stringfyRoutinArray());
                             editor.commit();
-//                            for(int j = 0; j < routin.getExercises().get(position).getSetCount(); j++) routin.getExercises().get(position).getReps().set(j, Integer.parseInt(repsEditTextNumber.getText().toString()));
                         } catch (NumberFormatException | JSONException e){
                             Log.d(TAG, e.toString());
                         }
@@ -205,14 +278,17 @@ public class TrainingActivity extends AppCompatActivity {
             editbutton.setText("완료");
             for(int i = 0; i < editLinearLayoutList.size(); i++){
                 editLinearLayoutList.get(i).setVisibility(View.VISIBLE);
+                exerciseDeleteButtonList.get(i).setVisibility(View.VISIBLE);
             }
         } else {
             Log.d(TAG, "onClickEditButton");
             editbutton.setText("편집");
             for(int i = 0; i < editLinearLayoutList.size(); i++){
                 editLinearLayoutList.get(i).setVisibility(View.GONE);
+                exerciseDeleteButtonList.get(i).setVisibility(View.GONE);
             }
             editLinearLayoutList = new ArrayList<>();
+            exerciseDeleteButtonList = new ArrayList<>();
             adapter = new exerciseListViewAdapter();
             for(int i = 0; i < routinJsonArray.getRoutin(routinPosition).getJSONArray("exercises").length(); i++){
                 adapter.addItem(routinJsonArray.getExercise(routinPosition, i));

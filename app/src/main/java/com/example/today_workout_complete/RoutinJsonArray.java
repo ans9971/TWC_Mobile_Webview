@@ -1,5 +1,7 @@
 package com.example.today_workout_complete;
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -7,6 +9,7 @@ import org.json.JSONObject;
 public class RoutinJsonArray {
     private static RoutinJsonArray instance;
     private JSONArray routinArray;
+    private String TAG = RoutinJsonArray.class.getSimpleName();
 
     public static RoutinJsonArray getInstance() {
         if(instance == null) instance = new RoutinJsonArray();
@@ -100,8 +103,12 @@ public class RoutinJsonArray {
         }
     }
 
-    public void updateRoutinName(int idx, String preRoutinName, String newRoutinName) throws JSONException {
-        routinArray.getJSONObject(idx).put("routinName", newRoutinName);
+    public void modifyRoutinName(int idx, String preRoutinName, String newRoutinName) {
+        try {
+            routinArray.getJSONObject(idx).put("routinName", newRoutinName);
+        } catch (JSONException e){
+            Log.d(TAG, e.toString());
+        }
     }
 
     public void updateLastExerciseTimeTook(int idx, int lastExerciseTimeTook) throws JSONException {
@@ -130,5 +137,17 @@ public class RoutinJsonArray {
 
     public void updateReps(int routinIndex, int exerciseIndex, int repsIndex, int reps) throws JSONException {
         routinArray.getJSONObject(routinIndex).getJSONArray("exercises").getJSONObject(exerciseIndex).getJSONArray("reps").put(repsIndex, reps);
+    }
+
+    public void deleteRoutin(int routinIndex){
+        routinArray.remove(routinIndex);
+    }
+
+    public void deleteExercise(int routinIndex, int exerciseIndex) {
+        try {
+            routinArray.getJSONObject(routinIndex).getJSONArray("exercises").remove(exerciseIndex);
+        } catch (JSONException e){
+            Log.d(TAG, e.toString());
+        }
     }
 }

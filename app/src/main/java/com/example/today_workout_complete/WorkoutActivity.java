@@ -1,14 +1,22 @@
 package com.example.today_workout_complete;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.TranslateAnimation;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +40,8 @@ public class WorkoutActivity extends AppCompatActivity {
     private SharedPreferences spref;
     private SharedPreferences.Editor editor;
     private RoutinJsonArray routinJsonArray = null;
+    private float preCurX = 0f;
+    private int prePosition = 10000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +71,7 @@ public class WorkoutActivity extends AppCompatActivity {
                 Random random = new Random();
                 String[] strList = {"push_up", "dips", "pull_up", "chin_up"};
                 String[] routinNameList = {"front", "back", "side", "under"};
-//                ArrayList<Routin> routins = new ArrayList<>();
+
                 for(int i = 0; i < 4; i++){
                     List<Exercise> exerciseList = new ArrayList<>();
                     ArrayList<Integer> repsList = new ArrayList<>();
@@ -70,8 +80,7 @@ public class WorkoutActivity extends AppCompatActivity {
                     for(int j = 0; j < 4; j++)  exerciseList.add(new Exercise(strList[j], setCount, repsList, random.nextInt(100), "chest"));
                     routinJsonArray.addRotin(new Routin(routinNameList[i], exerciseList, random.nextInt(10), random.nextInt(10000000) + ""));
                 }
-                // ===================================================================
-//            for(int i = 0; i < routins.size(); i++) routinJsonArray.addRotin(routins.get(i));
+
                 Log.d(TAG, routinJsonArray.stringfyRoutinArray());
                 editor.putString(MY_ROUTIN_PREFS_NAME, routinJsonArray.stringfyRoutinArray());
                 editor.commit();
@@ -87,7 +96,6 @@ public class WorkoutActivity extends AppCompatActivity {
             }
         }
         for(int i = 0; i < routinJsonArray.getRoutinArray().length(); i++) adapter.addItem(routinJsonArray.getRoutin(i));
-
 
         // 리스트뷰에 Adapter 설정
         routinListView.setAdapter(adapter);
@@ -127,14 +135,110 @@ public class WorkoutActivity extends AppCompatActivity {
                 view = (View) convertView;
             }
 
+            LinearLayout routinModifyLinearLayout = (LinearLayout) convertView.findViewById(R.id.routinModifyLinearLayout);
             TextView routinNameTextView = (TextView) convertView.findViewById(R.id.routinNameTextView);
             TextView exerciseCountTextView = (TextView) convertView.findViewById(R.id.exerciseCountTextView);
             TextView lastExerciseDateTextView = (TextView) convertView.findViewById(R.id.lastExerciseDateTextView);
+            Button routinNameModifyButton = (Button) convertView.findViewById(R.id.routinNameModifyButton);
+            Button routinDeleteButton = (Button) convertView.findViewById(R.id.routinDeleteButton);
+            routinModifyLinearLayout.setVisibility(View.GONE);
 
+            // 루틴 이름 변경
+            routinNameModifyButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    AlertDialog.Builder routinNameModifyAlert = new AlertDialog.Builder(WorkoutActivity.this);
+                    EditText routinNameEditText = new EditText(WorkoutActivity.this);
+
+                    routinNameModifyAlert.setView(routinNameEditText);
+                    String title = "변경할 루틴 이름을 입력해주세요";
+                    routinNameModifyAlert.setTitle(title);
+
+                    routinNameModifyAlert.setIcon(R.drawable.ic_baseline_fitness_center_24);
+                    routinNameModifyAlert.setPositiveButton("변경", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            String newRoutinName = routinNameEditText.getText().toString();
+
+                            routinJsonArray.modifyRoutinName(position, routinNameTextView.getText().toString(), newRoutinName);
+                            Log.d(TAG, routinJsonArray.stringfyRoutinArray());
+                            editor.putString(MY_ROUTIN_PREFS_NAME, routinJsonArray.stringfyRoutinArray());
+                            editor.commit();
+                            routinNameTextView.setText(newRoutinName);
+                            Toast.makeText(getApplicationContext(), "변경되었습니다.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    routinNameModifyAlert.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Toast.makeText(getApplicationContext(), "취소되었습니다.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    routinNameModifyAlert.show();
+                }
+            });
+
+            // 루틴 삭제
+            routinDeleteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    AlertDialog.Builder routinDeleteAlert = new AlertDialog.Builder(WorkoutActivity.this);
+
+                    String title = "정말 삭제하시겠습니까?";
+                    routinDeleteAlert.setTitle(title);
+
+                    routinDeleteAlert.setIcon(R.drawable.ic_baseline_fitness_center_24);
+                    routinDeleteAlert.setPositiveButton("삭제", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            routinJsonArray.deleteRoutin(position);
+                            Log.d(TAG, routinJsonArray.stringfyRoutinArray());
+                            editor.putString(MY_ROUTIN_PREFS_NAME, routinJsonArray.stringfyRoutinArray());
+                            editor.commit();
+                            adapter = new workoutListViewAdapter();
+                            for(int j = 0; j < routinJsonArray.getRoutinArray().length(); j++) adapter.addItem(routinJsonArray.getRoutin(j));
+                            routinListView.setAdapter(adapter);
+                            Toast.makeText(getApplicationContext(), "삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    routinDeleteAlert.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Toast.makeText(getApplicationContext(), "취소되었습니다.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    routinDeleteAlert.show();
+                }
+            });
+
+            // 스크롤 제스처로 수정/삭제 버튼 visible 제어
+            convertView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    if(motionEvent.getAction() == MotionEvent.ACTION_MOVE){
+                        float curX = motionEvent.getX();
+                        float curY = motionEvent.getY();
+                        Log.d(TAG, "손가락 움직임 : " + prePosition + "  " + preCurX+", "+curX+", "+curY);
+                        if(prePosition != position){
+                            preCurX = curX;
+                            prePosition = position;
+                            return false;
+                        }
+                        if(preCurX > curX){
+                            routinModifyLinearLayout.setVisibility(View.VISIBLE);
+                        } else if(preCurX < curX) {
+                            routinModifyLinearLayout.setVisibility(View.GONE);
+                        }
+                        preCurX = curX;
+                        prePosition = position;
+                    }
+                    return false;
+                }
+            });
             try {
                 routinNameTextView.setText(routinItem.getString("routinName"));
-                exerciseCountTextView.setText(routinItem.getJSONArray("exercises").length() + ", " + routinItem.getInt("lastExerciseTimeTook"));
-                lastExerciseDateTextView.setText("last time: "+ routinItem.getString("lastExerciseDate"));
+                exerciseCountTextView.setText("운동 개수: " + routinItem.getJSONArray("exercises").length() + ", 운동 시간: " + routinItem.getInt("lastExerciseTimeTook"));
+                lastExerciseDateTextView.setText("마지막 운동 날짜: "+ routinItem.getString("lastExerciseDate"));
                 Log.d(TAG, "getView() - [ "+position+" ] "+routinItem.getString("routinName"));
             } catch (JSONException e) {
                 e.printStackTrace();

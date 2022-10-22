@@ -7,13 +7,14 @@ import java.util.ArrayList;
 public class DynamicTimeWarping {
     private String TAG = DynamicTimeWarping.class.getSimpleName();
     private Float[][] dtwMatrix;
+    private final int SAKOE_CHIBA_BAND = 5;                 // 1초
+    private final int JUDGEMENT_COUNT_NUMBER = 4;           // 0.8초
 
     public Float[] cutPeriod(Float[] emgData) {
-        final int JUDGEMENT_COUNT_NUMBER = 2;
         Float[] newEmgData;
         int startIndex = 0;
         int lastIndex = emgData.length-1;
-        int judgmentCount = 0;				// 0.8초간 힘 주고 있는 경우로 가정
+        int judgmentCount = 0;
 
         Log.d(TAG, emgData.toString());
         // 첫 상승 구간 구하기
@@ -42,41 +43,60 @@ public class DynamicTimeWarping {
         newEmgData = new Float[lastIndex-startIndex+1];
         for(int i = startIndex; i <= lastIndex; i++) newEmgData[i-startIndex] = emgData[i];
 
-        String logText = "\n";
+        String logText = "";
         for(Float emg : emgData) logText += emg+ " ";
         Log.d(TAG, "emgData");
-        Log.d(TAG, "\n" + logText);
-        logText = "\n";
-        for(Float emg : newEmgData) logText += emg+ " ";
-        Log.d(TAG, "newEmgData");
-        Log.d(TAG, "\n" + logText);
-
+        Log.d(TAG, logText);
         return newEmgData;
     }
 
-    public Float[][] getDTWMatrix(Float[] timeSeries1, Float[] timeSeries2) {
-        dtwMatrix = new Float[timeSeries1.length+1][timeSeries2.length+1];
-        int SAKOE_CHIBA_BAND = 2;
+    public Float[] getNormalizedEmgData(Float[] emgData, Float min, Float max){
+        if(min == max){
+            for(int i = 0; i < emgData.length; i++) emgData[i] = 0f;
+            return emgData;
+        }
+        for(int i = 0; i < emgData.length; i++) emgData[i] = (emgData[i] - min)/(max - min);
+        return emgData;
+    }
 
-        Log.d(TAG, "@@@@@@@@@@@@@@@@@@ 초기 세팅 @@@@@@@@@@@@@@@@@@@@");
-        // 초기 세팅
+    public Float[][] getDTWMatrix(Float[] otherEmgData, Float[] myEmgData) {
+        String emgDataText = "";
+        for(Float emg : otherEmgData) emgDataText += emg+ " ";
+        Log.d(TAG, "otherEmgData");
+        Log.d(TAG, emgDataText);
+        emgDataText = "";
+        for(Float emg : myEmgData) emgDataText += emg+ " ";
+        Log.d(TAG, "myEmgData");
+        Log.d(TAG, emgDataText);
+
+        dtwMatrix = new Float[otherEmgData.length+1][myEmgData.length+1];
+
+        Log.d(TAG, "@@@@@@@@@@@@@@@@@@ 초기 세팅 @@@@@@@@@@@@@@@@@@@@  " + (13f - 13f));
+        int sakoeChibaBand = SAKOE_CHIBA_BAND;
+        int limitChibaBand = sakoeChibaBand * 2 - 1;
+        int chibaBandInitialHeight = sakoeChibaBand - 1;
+        int startPoint = 1;
+        boolean isColumnMAx = false;
+        boolean isRowMAx = false;
+
         for(int i = 0; i < dtwMatrix.length; i++){
-            for(int j = 0; j < dtwMatrix[i].length; j++) dtwMatrix[i][j] = 0f;
-        }
+            for(int j = 0; j < dtwMatrix[i].length; j++){
+                int maxColumnIndex = startPoint == 1 ? sakoeChibaBand + 1 : i + sakoeChibaBand - chibaBandInitialHeight;
 
-        int index = 1;
-        for(int i = 0; i < dtwMatrix.length; i++) {
-            for(int j=index; j<dtwMatrix[i].length; j++) {
-                try {
-                    if(dtwMatrix[i][j] != null) dtwMatrix[i][j] = Float.MAX_VALUE;
-                    if(dtwMatrix[j][i] != null) dtwMatrix[j][i] = Float.MAX_VALUE;
-                } catch (Exception e) {
-                    Log.d(TAG, "OUT");
+                isColumnMAx = maxColumnIndex >= dtwMatrix[i].length;
+                isRowMAx = dtwMatrix.length - i <= chibaBandInitialHeight + 1 && !isColumnMAx && j >= startPoint;
+                if(isRowMAx || (i != 0 && j >= startPoint && j < maxColumnIndex)){
+                    dtwMatrix[i][j] = 0f;
+                } else {
+                    dtwMatrix[i][j] = Float.MAX_VALUE;
                 }
-
             }
-            index += SAKOE_CHIBA_BAND;
+            if(!isColumnMAx && sakoeChibaBand == limitChibaBand) startPoint++;
+            if(i != 0 && sakoeChibaBand < limitChibaBand) sakoeChibaBand++;
         }
+
+        dtwMatrix[0][0] = 0f;
+
 
         showDtwMatrix();
 
@@ -88,7 +108,13 @@ public class DynamicTimeWarping {
                     continue;
                 }
 
-                Float dist = Math.abs((timeSeries1[i-1] - timeSeries2[j-1]));
+                Float dist = Math.abs((otherEmgData[i-1] - myEmgData[j-1]));
+                if(dist.isNaN()){
+                    Log.d(TAG, i + "  " + j);
+                    Log.d(TAG, otherEmgData[i-1] + "  " + myEmgData[j-1]);
+                    Log.d(TAG, "otherEmgData[i-1] - myEmgData[j-1] = " + (otherEmgData[i-1] - myEmgData[j-1]));
+                    Log.d(TAG, "Math.abs((otherEmgData[i-1] - myEmgData[j-1])) = " + Math.abs((otherEmgData[i-1] - myEmgData[j-1])));
+                }
                 Float min = dtwMatrix[i-1][j-1];
 
                 if(min > dtwMatrix[i-1][j]) {
@@ -100,6 +126,13 @@ public class DynamicTimeWarping {
                 else if(min > dtwMatrix[i][j-1]) min = dtwMatrix[i][j-1];
 
                 dtwMatrix[i][j] = dist + min;
+
+                if(dtwMatrix[i][j].isNaN()){
+                    dtwMatrix[i][j] = 0f;
+                    Log.d(TAG, i + "   " + j);
+                    Log.d(TAG, dist + "   " + min);
+
+                }
             }
         }
         showDtwMatrix();
@@ -116,10 +149,10 @@ public class DynamicTimeWarping {
 
     }
 
-    public Float getDtwDistance(Float[] timeSeries1, Float[] timeSeries2) {
-        Float[][] dtwMatrix = getDTWMatrix(timeSeries1, timeSeries2);
+    public Float getDtwDistance(Float[] otherEmgData, Float[] myEmgData) {
+        Float[][] dtwMatrix = getDTWMatrix(otherEmgData, myEmgData);
 
-        return dtwMatrix[timeSeries1.length][timeSeries2.length];
+        return dtwMatrix[otherEmgData.length][myEmgData.length];
     }
 
     public ArrayList<int[]> getWarpingPath(Float[] ts1, Float[] ts2) {

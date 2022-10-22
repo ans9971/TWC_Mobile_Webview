@@ -277,6 +277,11 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                                 if(clikckExercise.equals(routinJsonArray.getExercise(routinPosition, i).getString("exerciseName"))){
                                     exerciseSelected = i;
                                     exerciseName = routinJsonArray.getExercise(routinPosition, exerciseSelected).getString("exerciseName");
+                                    if(routinJsonArray.getExercise(routinPosition, exerciseSelected).getString("measuredMuscle") == null){
+                                        routinJsonArray.getExercise(routinPosition, exerciseSelected).put("measuredMuscle", "chest");
+                                        editor.putString(WorkoutActivity.MY_ROUTIN_PREFS_NAME, routinJsonArray.stringfyRoutinArray());
+                                        editor.commit();
+                                    }
                                     measuredMuscle = routinJsonArray.getExercise(routinPosition, exerciseSelected).getString("measuredMuscle");
                                     Log.d(TAG, "exerciseSelected: " + i + "  exerciseName: " + exerciseName);
                                     Toast.makeText(getApplicationContext(), "exerciseName: " + exerciseName, Toast.LENGTH_SHORT);
@@ -367,23 +372,40 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
             workoutTrackerRepsEditTextNumber.setText(reps + "");
             Log.d(TAG, "getView() - [ "+position+" ] "+ reps);
 
-            workoutTrackerRepsEditTextNumber.addTextChangedListener(new TextWatcher() {
+            workoutTrackerRepsEditTextNumber.setOnFocusChangeListener(new View.OnFocusChangeListener() {
                 @Override
-                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
-                @Override
-                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
-                @Override
-                public void afterTextChanged(Editable editable) {
-                    Log.d(TAG, "workoutTrackerRepsEditTextNumber " + editable);
-                    try {
-                        routinJsonArray.updateReps(routinPosition, exerciseSelected, position, Integer.parseInt(editable.toString()));
-                        editor.putString(WorkoutActivity.MY_ROUTIN_PREFS_NAME, routinJsonArray.stringfyRoutinArray());
-                        editor.commit();
-                    } catch (NumberFormatException | JSONException e){
-                        Log.d(TAG, e.toString());
+                public void onFocusChange(View view, boolean hasFocus) {
+                    if(!hasFocus){
+                        Log.d(TAG, "workoutTrackerRepsEditTextNumber " + workoutTrackerRepsEditTextNumber.getText().toString());
+                        try {
+                            routinJsonArray.updateReps(routinPosition, exerciseSelected, position, Integer.parseInt(workoutTrackerRepsEditTextNumber.getText().toString()));
+                            editor.putString(WorkoutActivity.MY_ROUTIN_PREFS_NAME, routinJsonArray.stringfyRoutinArray());
+                            editor.commit();
+                        } catch (NumberFormatException | JSONException e){
+                            Log.d(TAG, e.toString());
+                        }
                     }
                 }
             });
+
+//            workoutTrackerRepsEditTextNumber.addTextChangedListener(new TextWatcher() {
+//                @Override
+//                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
+//                @Override
+//                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
+//                @Override
+//                public void afterTextChanged(Editable editable) {
+//                    Log.d(TAG, "workoutTrackerRepsEditTextNumber " + editable);
+//                    try {
+//                        routinJsonArray.updateReps(routinPosition, exerciseSelected, position, Integer.parseInt(editable.toString()));
+//                        editor.putString(WorkoutActivity.MY_ROUTIN_PREFS_NAME, routinJsonArray.stringfyRoutinArray());
+//                        editor.commit();
+//                        updateWorkoutTrackerListView();
+//                    } catch (NumberFormatException | JSONException e){
+//                        Log.d(TAG, e.toString());
+//                    }
+//                }
+//            });
 
             //각 아이템 선택 event
             convertView.setOnClickListener(new View.OnClickListener() {
@@ -563,12 +585,13 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
                     workoutJSON.put("maximum_value_of_sets", Collections.max(maximumValueOfSets));
                     workoutJSON.put("minimum_value_of_sets", Collections.max(minimumValueOfSets));
                     workoutJSON.put("sets", setsSON);
+
                     // 웹 서버에 전송
-                    /*
                     requestingServer = new RequestingServer(this, workoutJSON.toString());
                     String response = requestingServer.execute(myEmgDataURL).get();
                     Toast.makeText(getApplicationContext(), response, Toast.LENGTH_LONG).show();
-                    */
+                    
+                    // 내부 루틴 정보에 저장
 
                     showDtwDistacne();
 
@@ -577,12 +600,11 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
 
                 } catch (JSONException e) {
                     e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
                 }
-//                catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                } catch (ExecutionException e) {
-//                    e.printStackTrace();
-//                }
                 Log.d(TAG,workoutJSON.toString());
             } else {
                 maximumData = Collections.max(emgData);
@@ -597,9 +619,12 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
 
     public void showDtwDistacne(){
         // DTW distance 계산
-        Float[] cutOtherEmgData = dtw.cutPeriod(otherEmgData.getSets().get(1).getEmg_data());
-        Float[] cutEmgData = dtw.cutPeriod(emgData.toArray(new Float[emgData.size()]));
-        Float dtwDistance = dtw.getDtwDistance(cutOtherEmgData, cutEmgData);
+        int currentSet = setsTotal - setsCount - 1;
+        Float[] dtwOtherEmgData = dtw.cutPeriod(otherEmgData.getSets().get(1).getEmg_data());
+        Float[] dtwMyEmgData = dtw.cutPeriod(emgData.toArray(new Float[emgData.size()]));
+        dtwOtherEmgData = dtw.getNormalizedEmgData(dtwOtherEmgData, otherEmgData.getSets().get(1).getMinimum_value_of_set(), otherEmgData.getSets().get(1).getMaximum_value_of_set());
+        dtwMyEmgData = dtw.getNormalizedEmgData(dtwMyEmgData, minimumValueOfSets.get(currentSet), maximumValueOfSets.get(currentSet));
+        Float dtwDistance = dtw.getDtwDistance(dtwOtherEmgData, dtwMyEmgData);
 
         Toast.makeText(getApplicationContext(), "세트 끝 DTW distance: " + dtwDistance, Toast.LENGTH_LONG).show();
 
@@ -610,15 +635,11 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
         Log.d(TAG, "path: " + path);
 
         // 거리 => %
-        int currentSet = setsTotal - setsCount - 1;
-        float maximumEmgData = otherEmgData.getSets().get(1).getMaximum_value_of_set() > maximumValueOfSets.get(currentSet) ? otherEmgData.getSets().get(1).getMaximum_value_of_set() : maximumValueOfSets.get(currentSet);
-        float minimumEmgData = otherEmgData.getSets().get(1).getMinimum_value_of_set() < minimumValueOfSets.get(currentSet) ? otherEmgData.getSets().get(1).getMinimum_value_of_set() : minimumValueOfSets.get(currentSet);
-        int betterLongArrayLenth = cutOtherEmgData.length > cutEmgData.length ? cutOtherEmgData.length : cutEmgData.length;
-        float maximumDistance = (maximumEmgData-minimumEmgData) * betterLongArrayLenth;
-        float similarity = dtwDistance * 100 / maximumDistance;
+
+        float similarity = Math.abs((dtwDistance*100/warpingPath.size()) - 100);
         Log.d(TAG, "currentSet: " + currentSet);
-        Log.d(TAG,   "maximumEmgData: " + maximumEmgData + "  minimumEmgData: " + minimumEmgData + "  warpingPath.size(): " + warpingPath.size() + " betterLongArrayLenth: " + betterLongArrayLenth);
-        Log.d(TAG,   "maximumDistance: " + maximumDistance + "  dtwDistance: " + dtwDistance  + "  dtwDistance*100/maximumDistance: " + (dtwDistance * 100 / maximumDistance) );
+        Log.d(TAG,   "warpingPath.size(): " + warpingPath.size());
+        Log.d(TAG,   "dtwDistance: " + dtwDistance  + "  dtwDistance*100/warpingPath.size(): " + (dtwDistance * 100 / warpingPath.size()) );
         Log.d(TAG,   "similarity: " + similarity);
         similarityTextViewList.get(currentSet).setText(String.format("%.2f", similarity) + "%");
         similarityTextViewList.get(currentSet).setVisibility(View.VISIBLE);
@@ -626,7 +647,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
         // chart 갱신
         chart.clear();
         ArrayList<Entry> othersDataList = new ArrayList<>();
-        for(int i = 0; i < cutOtherEmgData.length; i++) othersDataList.add(new Entry(i, cutOtherEmgData[i]));
+        for(int i = 0; i < dtwOtherEmgData.length; i++) othersDataList.add(new Entry(i, dtwOtherEmgData[i]));
         Log.d(TAG, "===========");
         ohtersLineDataSet = new LineDataSet(othersDataList, "숙련자");
         ohtersLineDataSet.setCircleRadius(1f);
@@ -635,7 +656,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
         ohtersLineDataSet.setDrawCircleHole(false);
 
         ArrayList<Entry> myDataList = new ArrayList<>();
-        for(int i = 0; i < cutEmgData.length; i++) myDataList.add(new Entry(i, cutEmgData[i]));
+        for(int i = 0; i < dtwMyEmgData.length; i++) myDataList.add(new Entry(i, dtwMyEmgData[i]));
         myLineDataSet = new LineDataSet(myDataList, "나");
         myLineDataSet.setCircleRadius(1f);
         myLineDataSet.setColor(Color.BLUE);
@@ -654,8 +675,8 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
         // warping path 데이터 셋 추가
         for(int[] wp : warpingPath){
             ArrayList<Entry> wrapingPathDataList = new ArrayList<>();
-            wrapingPathDataList.add(new Entry(wp[0]-1, cutOtherEmgData[wp[0]-1]));
-            wrapingPathDataList.add(new Entry(wp[1]-1, cutEmgData[wp[1]-1]));
+            wrapingPathDataList.add(new Entry(wp[0]-1, dtwOtherEmgData[wp[0]-1]));
+            wrapingPathDataList.add(new Entry(wp[1]-1, dtwMyEmgData[wp[1]-1]));
             LineDataSet wrapingPathLineDataSet = new LineDataSet(wrapingPathDataList, "");
             wrapingPathLineDataSet.setFormLineWidth(0f);
             wrapingPathLineDataSet.setFormSize(0f);
@@ -668,7 +689,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
 
         chart.moveViewToX(0f);
         chart.invalidate();
-        float xMaxRange = cutOtherEmgData.length > cutEmgData.length ? cutOtherEmgData.length : cutEmgData.length;
+        float xMaxRange = dtwOtherEmgData.length > dtwMyEmgData.length ? dtwOtherEmgData.length : dtwMyEmgData.length;
         chart.setVisibleXRange(0, xMaxRange);
     }
 
