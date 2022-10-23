@@ -236,8 +236,6 @@ public class CalenderActivity extends AppCompatActivity {
                 myLineDataSet.setColor(random.nextInt(16777215) + alphaColor);
                 myLineDataSet.setCircleHoleRadius(1f);
                 myLineDataSet.setCircleRadius(1f);
-//                myLineDataSet.setFormLineWidth(0f); //
-                myLineDataSet.setFormSize(0f);
                 myLineDataSet.setLineWidth(2f);
                 lineData.addDataSet(myLineDataSet);
             }

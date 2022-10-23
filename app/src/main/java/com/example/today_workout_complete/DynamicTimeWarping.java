@@ -8,7 +8,7 @@ public class DynamicTimeWarping {
     private String TAG = DynamicTimeWarping.class.getSimpleName();
     private Float[][] dtwMatrix;
     private final int SAKOE_CHIBA_BAND = 5;                 // 1초
-    private final int JUDGEMENT_COUNT_NUMBER = 4;           // 0.8초
+    private final int JUDGEMENT_COUNT_NUMBER = 3;           // 0.8초
 
     public Float[] cutPeriod(Float[] emgData) {
         Float[] newEmgData;
@@ -53,12 +53,7 @@ public class DynamicTimeWarping {
             for(int i = 0; i < emgData.length; i++) emgData[i] = 0f;
             return emgData;
         }
-        for(int i = 0; i < emgData.length; i++){
-            emgData[i] = (emgData[i] - min)/(max - min);
-//            Log.d(TAG, "min: " + min + "  max: " + max + "  emgData[i]: " + emgData[i]);
-//            Log.d(TAG, "(max - min): " + (max - min) + "  (emgData[i] - min): " + (emgData[i] - min));
-//            Log.d(TAG, "emgData[i]: " + emgData[i]);
-        }
+        for(int i = 0; i < emgData.length; i++) emgData[i] = (emgData[i] - min)/(max - min);
         return emgData;
     }
 

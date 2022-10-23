@@ -42,6 +42,7 @@ public class WorkoutActivity extends AppCompatActivity {
     private RoutinJsonArray routinJsonArray = null;
     private float preCurX = 0f;
     private int prePosition = 10000;
+    private TextView workoutTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,10 +52,13 @@ public class WorkoutActivity extends AppCompatActivity {
         MenuFragment menuFragment = new MenuFragment();
         getSupportFragmentManager().beginTransaction().replace(R.id.menuFragmentFrame, menuFragment).commit();
 
+        workoutTextView = (TextView) findViewById(R.id.workoutTextView);
         routinListView = (ListView) findViewById(R.id.routinListView);
         adapter = new workoutListViewAdapter();
 
         // 루틴 프리퍼런스 가져오기
+        spref = getSharedPreferences(WebViewActivity.MY_NICKNAME_PREFS_NAME, Context.MODE_PRIVATE);
+        workoutTextView.setText("안녕하세요 " + spref.getString(WebViewActivity.MY_NICKNAME_PREFS_NAME, "") + "님");
         spref = getSharedPreferences(MY_ROUTIN_PREFS_NAME, Context.MODE_PRIVATE);
         editor = spref.edit();
 
