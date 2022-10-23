@@ -3,6 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/drawable-v24/textview_top_line.xml" value="0.20833333333333334" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/drawable/button_radius.xml" value="0.46875" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/drawable/checkicon.xml" value="0.46875" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/drawable/checkicon2.xml" value="0.46875" />
@@ -35,6 +36,7 @@
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/listview_list_exercise.xml" value="0.45260416666666664" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/listview_list_routin.xml" value="0.5" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/listview_list_workout_tracker.xml" value="0.45260416666666664" />
+        <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/recycler_list_calendar.xml" value="0.1921875" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/layout/recycler_list_workout_tracker.xml" value="0.45260416666666664" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/menu/bottom_nav_menu.xml" value="0.43385416666666665" />
         <entry key="..\:/Users/dblab/AndroidStudioProjects/2022/Mobile-master/app/src/main/res/menu/navigation_bottom.xml" value="0.43385416666666665" />

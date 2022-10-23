@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
         videoView = (VideoView) findViewById(R.id.video_view);
 
-        videoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.test));
+        videoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.main_viedeo));
 
         videoView.start();
         videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){

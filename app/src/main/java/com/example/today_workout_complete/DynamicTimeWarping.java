@@ -24,7 +24,6 @@ public class DynamicTimeWarping {
                 startIndex = ++i;
             }
             judgmentCount++;
-            Log.d(TAG, "judgmentCount: " + judgmentCount);
         }
         Log.d(TAG, "startIndex: " + startIndex);
 
@@ -36,7 +35,6 @@ public class DynamicTimeWarping {
                 lastIndex = --i;
             }
             judgmentCount++;
-            Log.d(TAG, "judgmentCount: " + judgmentCount);
         }
         Log.d(TAG, "lastIndex: " + lastIndex);
 
@@ -55,7 +53,12 @@ public class DynamicTimeWarping {
             for(int i = 0; i < emgData.length; i++) emgData[i] = 0f;
             return emgData;
         }
-        for(int i = 0; i < emgData.length; i++) emgData[i] = (emgData[i] - min)/(max - min);
+        for(int i = 0; i < emgData.length; i++){
+            emgData[i] = (emgData[i] - min)/(max - min);
+//            Log.d(TAG, "min: " + min + "  max: " + max + "  emgData[i]: " + emgData[i]);
+//            Log.d(TAG, "(max - min): " + (max - min) + "  (emgData[i] - min): " + (emgData[i] - min));
+//            Log.d(TAG, "emgData[i]: " + emgData[i]);
+        }
         return emgData;
     }
 

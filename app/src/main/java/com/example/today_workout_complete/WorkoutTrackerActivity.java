@@ -96,6 +96,8 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     private long setsStartingTime;              // 운동 시작 시간
     private long setStartingTime;               // 세트 시작 시간
     private long breakStartingTime;             // 휴식 시작 시간
+    private Float maximumData = 0f;
+    private Float minimumData = 0f;
 
     // 블루투스 관련 변수
     private static BLEController bleController;
@@ -208,7 +210,7 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     public void initChart(){
         chart.clear();
         String str = " ";
-        int setIndex = 1;
+        int setIndex = 0;
         for(int i=0; i < otherEmgData.getSets().get(setIndex).getEmg_data().length; i++) {
             str += otherEmgData.getSets().get(setIndex).getEmg_data()[i] + " ";
         }
@@ -506,8 +508,6 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     =================================== EMG 데이터 저장 코드 ===============================
     */
     public void controlWorkout() {
-        Float maximumData = 0f;
-        Float minimumData = 0f;
         if (WorkoutTrackerActivity.isWorkout){                      // 세트 시작 시
             if (setsTotal == (setsCount--)) {                       // 첫 세트인 경우 파일로 저장할 json 객체 초기화
                 setsStartingTime = System.currentTimeMillis();
@@ -620,15 +620,17 @@ public class WorkoutTrackerActivity extends AppCompatActivity implements BLECont
     public void showDtwDistacne(){
         // DTW distance 계산
         int currentSet = setsTotal - setsCount - 1;
-        Float[] dtwOtherEmgData = dtw.cutPeriod(otherEmgData.getSets().get(1).getEmg_data());
+        if(currentSet < 0) currentSet = 0;
+        int setIndex = 0;
+        Float[] dtwOtherEmgData = dtw.cutPeriod(otherEmgData.getSets().get(setIndex).getEmg_data());
         Float[] dtwMyEmgData = dtw.cutPeriod(emgData.toArray(new Float[emgData.size()]));
-        dtwOtherEmgData = dtw.getNormalizedEmgData(dtwOtherEmgData, otherEmgData.getSets().get(1).getMinimum_value_of_set(), otherEmgData.getSets().get(1).getMaximum_value_of_set());
+        dtwOtherEmgData = dtw.getNormalizedEmgData(dtwOtherEmgData, otherEmgData.getSets().get(setIndex).getMinimum_value_of_set(), otherEmgData.getSets().get(setIndex).getMaximum_value_of_set());
         dtwMyEmgData = dtw.getNormalizedEmgData(dtwMyEmgData, minimumValueOfSets.get(currentSet), maximumValueOfSets.get(currentSet));
         Float dtwDistance = dtw.getDtwDistance(dtwOtherEmgData, dtwMyEmgData);
 
         Toast.makeText(getApplicationContext(), "세트 끝 DTW distance: " + dtwDistance, Toast.LENGTH_LONG).show();
 
-        ArrayList<int[]> warpingPath = dtw.getWarpingPath(otherEmgData.getSets().get(1).getEmg_data(), emgData.toArray(new Float[emgData.size()]));
+        ArrayList<int[]> warpingPath = dtw.getWarpingPath(otherEmgData.getSets().get(0).getEmg_data(), emgData.toArray(new Float[emgData.size()]));
         String path = "";
         for(int[] wp : warpingPath) path += wp[0] + "," + wp[1] + " - ";
         Log.d(TAG, "dtwDistance: " + dtwDistance);

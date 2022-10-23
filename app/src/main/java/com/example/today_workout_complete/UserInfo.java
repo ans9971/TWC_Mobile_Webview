@@ -25,6 +25,18 @@ public class UserInfo {
         return nickname;
     }
 
+    public String getEmg_data_path() {
+        return emg_data_path;
+    }
+
+    public void setEmg_data_path(String emg_data_path) {
+        this.emg_data_path = emg_data_path;
+    }
+
+    @SerializedName("emg_data_path")
+    private String emg_data_path;
+
+
 
     public String getCreation_datetime() {
         return creation_datetime;
