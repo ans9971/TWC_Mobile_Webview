@@ -181,7 +181,6 @@ public class CalenderActivity extends AppCompatActivity {
             calendar.add(Calendar.MONTH, -2);
 
             //month는 아래 입력칸에서 +1 달로 인식됨
-            // ex) 10월 15일에 입력하고싶어서 2022,10,15에하면 앱 캘린더엔 11월 15일에 표시되있음
             for (int i = 0; i < calendarShow.size(); i++) {
                 ArrayList<String> data1 = new ArrayList<>();
                 String yearString = calendarShow.get(i).substring(0, 4);
