@@ -57,7 +57,6 @@ public class CalenderActivity extends AppCompatActivity {
     ArrayList<String> calendarShow = new ArrayList<>();
     private RecyclerViewAdapter recyclerViewAdapter;
     private RecyclerView caleanderRecyclerView;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,22 +64,18 @@ public class CalenderActivity extends AppCompatActivity {
         materialCalendarView = (MaterialCalendarView) findViewById(R.id.calendarView);
         MenuFragment menuFragment = new MenuFragment();
         getSupportFragmentManager().beginTransaction().replace(R.id.menuFragmentFrame, menuFragment).commit();
-
         materialCalendarView.state().edit()
                 .setFirstDayOfWeek(Calendar.SUNDAY)
                 .setMinimumDate(CalendarDay.from(2017, 0, 1)) // 달력의 시작
                 .setMaximumDate(CalendarDay.from(2030, 11, 31)) // 달력의 끝
                 .setCalendarDisplayMode(CalendarMode.MONTHS)
                 .commit();
-
         materialCalendarView.addDecorators(
                 new SundayDecorator(),
                 new SaturdayDecorator(),
                 oneDayDecorator);
-
         String[] result = {"2017,03,18", "2017,04,18", "2017,05,18", "2017,06,18"};
         nickname = getSharedPreferences(WebViewActivity.MY_NICKNAME_PREFS_NAME, Context.MODE_PRIVATE).getString(WebViewActivity.MY_NICKNAME_PREFS_NAME, "");
-
         new ApiSimulator(result).executeOnExecutor(Executors.newSingleThreadExecutor());
         materialCalendarView.setOnDateChangedListener(new OnDateSelectedListener() {
             @Override
@@ -88,7 +83,6 @@ public class CalenderActivity extends AppCompatActivity {
                 int Year = date.getYear();
                 int Month = date.getMonth() + 1;
                 int Day = date.getDay();
-
                 Call<List<EmgData>> sensordata = retrofitAPI.getEmgData(Year, nickname, Month, Day);
                 sensordata.enqueue(new Callback<List<EmgData>>() {
                     @Override
@@ -96,8 +90,6 @@ public class CalenderActivity extends AppCompatActivity {
                         // caleanderRecyclerView
                         ArrayList<String> workoutDataList = new ArrayList<>();
                         caleanderRecyclerView = (RecyclerView) findViewById(R.id.caleanderRecyclerView);
-
-
                         List<EmgData> EmgDataList = response.body();
                         if(EmgDataList.size() == 0){
                             workoutDataList.add("해당날짜에 운동하지 않았습니다!");
@@ -110,9 +102,7 @@ public class CalenderActivity extends AppCompatActivity {
                             caleanderRecyclerView.setAdapter(recyclerViewAdapter);
                             caleanderRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
                         }
-
                     }
-
                     @Override
                     public void onFailure(Call<List<EmgData>> call, Throwable t) {
                         datatext.setText(t.getMessage());
@@ -140,7 +130,6 @@ public class CalenderActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
-
             @Override
             public void onFailure(Call<List<UserInfo>> call, Throwable t) {
                 datatext.setText(t.getMessage());
@@ -149,13 +138,11 @@ public class CalenderActivity extends AppCompatActivity {
     }
 
     private void setRetrofitInit() {
-
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("http://118.67.132.81:8080")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         retrofitAPI = retrofit.create(RetrofitAPI.class);
-
     }
 
     private class ApiSimulator extends AsyncTask<Void, Void, List<CalendarDay>> {
@@ -174,12 +161,9 @@ public class CalenderActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-//            String content1=" ";
             Calendar calendar = Calendar.getInstance();
             ArrayList<CalendarDay> dates = new ArrayList<>();
-
             calendar.add(Calendar.MONTH, -2);
-
             //month는 아래 입력칸에서 +1 달로 인식됨
             for (int i = 0; i < calendarShow.size(); i++) {
                 ArrayList<String> data1 = new ArrayList<>();
@@ -193,7 +177,6 @@ public class CalenderActivity extends AppCompatActivity {
             }
             return dates;
         }
-
         @Override
         protected void onPostExecute(@NonNull List<CalendarDay> calendarDays) {
             super.onPostExecute(calendarDays);
@@ -202,9 +185,7 @@ public class CalenderActivity extends AppCompatActivity {
             }
             materialCalendarView.addDecorator(new EventDecorator(Color.GREEN, calendarDays, CalenderActivity.this));
         }
-
     }
-
     public class RecyclerViewAdapter extends RecyclerView.Adapter<CalenderActivity.RecyclerViewAdapter.ViewHolder> {
 
         @NonNull
@@ -245,16 +226,13 @@ public class CalenderActivity extends AppCompatActivity {
         public RecyclerViewAdapter(List<EmgData> workoutDataList) {
             this.workoutDataList = workoutDataList;
         }
-
         @Override
         public int getItemCount() {
             return workoutDataList.size();
         }
-
         public class ViewHolder extends RecyclerView.ViewHolder {
             TextView workoutDataListTextView;
             LineChart chart;
-
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 workoutDataListTextView = (TextView) itemView.findViewById(R.id.workoutDataListTextView);
