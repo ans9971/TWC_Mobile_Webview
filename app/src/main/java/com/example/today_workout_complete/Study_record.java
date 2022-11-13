@@ -11,4 +11,5 @@ public class Study_record {
     //221110 연관관계 매핑 1차
     //221111 연관관계 매핑 실전예제 완료
     //manytoone 관계
+    //연관관계 매핑 2단계 완료
 }
