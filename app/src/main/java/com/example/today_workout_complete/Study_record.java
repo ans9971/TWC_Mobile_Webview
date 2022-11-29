@@ -24,4 +24,5 @@ public class Study_record {
     //주문 설계
     //주문설계2
     //상품 엔티티 개발
+    //주문기능스트
 }
