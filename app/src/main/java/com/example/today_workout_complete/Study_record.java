@@ -26,4 +26,5 @@ public class Study_record {
     //상품 엔티티 개발
     //주문기능스트
     //주문검색
+    //웹기능구현1
 }
