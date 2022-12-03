@@ -29,4 +29,5 @@ public class Study_record {
     //웹기능구현1
     //웹화면구현1
     //controller 구현 1
+    //controller 구현 2
 }
