@@ -36,5 +36,6 @@ public class Study_record {
     //주문 취소
     //jpa1편 복습
     //api 활용1
+    //api  활용2
 
 }
